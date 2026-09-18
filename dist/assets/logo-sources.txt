@@ -1,0 +1,5 @@
+City Science: https://www.media.mit.edu/group-glyphs/city-science/full/
+Original vector paths retained. Canvas whitespace trimmed using viewBox only.
+MIT Media Lab: https://upload.wikimedia.org/wikipedia/commons/4/45/MIT_Media_Lab_logo.svg
+Provenance: https://commons.wikimedia.org/wiki/File:MIT_Media_Lab_logo.svg (copied from the MIT Media Lab website).
+Vector artwork unchanged. Both logos shown in white with CSS monochrome treatment.

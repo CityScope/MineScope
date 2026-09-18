@@ -1,0 +1,9 @@
+work/
+outputs/
+.sites-runtime/
+.openai/
+.DS_Store
+dist/sources/
+dist/*.pdf
+dist/humboldt.json
+dist/tailings-coquimbo.geojson

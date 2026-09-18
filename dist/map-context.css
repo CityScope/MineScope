@@ -1,0 +1,72 @@
+/* Shared lettering color, with secondary marks at a quieter scale. */
+.topbar{--brand-color:#edf0e8}
+.brand,.brand-partners,.brand-partners a{color:var(--brand-color)}
+.brand-partners{gap:20px;padding-left:21px}
+.partner-mark{display:block;height:27px;background:currentColor;mask-repeat:no-repeat;mask-size:contain;mask-position:center;-webkit-mask-repeat:no-repeat;-webkit-mask-size:contain;-webkit-mask-position:center}
+.city-science{width:55px;mask-image:url('assets/city-science.svg');-webkit-mask-image:url('assets/city-science.svg')}
+.media-lab{width:50px;mask-image:url('assets/mit-media-lab.svg');-webkit-mask-image:url('assets/mit-media-lab.svg')}
+.background-control{display:flex;align-items:center;height:38px;flex-shrink:0;background:#0c2931;border:1px solid #ffffff20;border-radius:7px;color:#d5dfd5;position:relative}
+.background-symbol{font-size:23px;padding-left:10px;color:#c0ae89;line-height:1;pointer-events:none}
+.background-control select{appearance:none;background:transparent;color:inherit;border:0;padding:8px 22px 8px 8px;width:120px;font-family:inherit;font-size:13px;font-weight:500;line-height:20px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8'%3E%3Cpath d='m1 2 4 4 4-4' fill='none' stroke='%23a8bcae' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
+.background-control option{background:#143239;color:#e6ece7}
+.background-control>button{color:#95ada1;font-size:15px;border-left:1px solid #ffffff16;width:30px;height:25px;padding:0}
+.background-control>button:hover{color:#edf0e8}
+.map-display-controls{left:232px}
+.sidebar-close,.sidebar-scrim{display:none}
+.project-heading{position:relative}
+.mining-pin{width:14px;height:14px;display:block;background:#bdaa83;border:2px solid #f5efda;box-shadow:0 1px 5px #09252d9c;transform:rotate(45deg);border-radius:2px}
+.mining-map-icon:hover .mining-pin,.mining-map-icon:focus .mining-pin{background:#f4d291;box-shadow:0 0 0 4px #e8c38050}
+.registry-facts{display:grid;grid-template-columns:1fr;gap:14px;margin:18px 0}
+.registry-facts div{border-bottom:1px solid #ffffff14;padding-bottom:10px}
+.registry-facts dt{color:#91aa9b;font-size:11px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.registry-facts dd{margin:0;color:#dce5d5;font-size:14px;line-height:1.45}
+.registry-actions{display:grid;gap:9px;margin-top:16px}.registry-actions .button{width:100%;justify-content:center}
+.registry-note{font-size:12px!important;line-height:1.65!important;color:#a6b8a7!important}
+.registry-list{display:grid;gap:5px;margin:14px 0}.registry-list button{text-align:left;padding:10px 12px;border:1px solid #ffffff20;border-radius:5px;color:#dce5d5;background:#1b3d43}.registry-list small{display:block;color:#92aa9a;margin-top:4px}
+.map-bottom{overflow-x:auto;scrollbar-width:thin}.legend{flex-wrap:nowrap;white-space:nowrap;max-width:none}.legend>span{flex-shrink:0}
+.map-context-credit{font-size:12px;line-height:1.6;color:#91aa9b;margin-top:18px}
+@media(min-width:1550px){.map-display-controls{left:236px}}
+@media(max-width:1150px){.map-display-controls{left:225px}}
+@media(max-width:900px){.map-display-controls{left:222px}.partner-mark{height:25px}.city-science{width:51px}.media-lab{width:46px}}
+@media(max-width:700px),(orientation:portrait){
+  .sidebar{position:absolute;top:68px;bottom:0;left:0;width:min(344px,90vw);flex-basis:auto;transform:translateX(-105%);z-index:1100;box-shadow:12px 0 40px #00172380;transition:transform .2s ease}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-close{display:grid;place-items:center;position:absolute;top:14px;right:14px;width:32px;height:32px;line-height:1;font-size:24px;color:#bdcdbd;border:1px solid #ffffff20;border-radius:6px;background:#24444b;z-index:2}
+  .sidebar .heading-row{padding-right:36px}
+  .sidebar-scrim:not([hidden]){display:block;position:fixed;inset:68px 0 0;background:#031b2580;backdrop-filter:blur(2px);z-index:1000;cursor:default}
+  .mobile-toggle{display:flex;gap:6px;align-items:center;position:absolute;top:14px;left:14px;z-index:540;background:#23424a;border:1px solid #ffffff24;color:#d3decf;font-size:13px;min-height:36px;padding:7px 10px;border-radius:6px}
+  .sidebar.open~.map-shell #mobile-toggle{visibility:hidden}
+  .map-top{padding:0 14px;gap:8px}
+  .background-control{margin-left:95px}
+  .map-display-controls{left:323px;right:auto}
+  .inspector{left:14px;right:14px;top:auto;bottom:174px;width:auto;max-width:420px;max-height:43%;border-radius:9px;z-index:550}
+  .simulation-map-status{right:auto;max-width:calc(100% - 200px)}
+  .leaflet-bottom.leaflet-left{left:auto;right:14px;top:auto;bottom:24px;width:32px}
+  .leaflet-bottom.leaflet-left .leaflet-control-zoom{position:relative!important;left:0;bottom:auto!important;margin:0!important}
+}
+@media(max-width:700px){
+  .brand-partners{gap:22px}.partner-mark{height:23px}.city-science{width:47px}.media-lab{width:43px}
+  .sidebar{top:102px}.sidebar-scrim:not([hidden]){top:102px}
+  .background-control{margin-left:91px;height:36px}.background-symbol{display:none}.background-control select{width:111px;padding-left:10px;font-size:12px}.background-control>button{width:27px}
+  .map-display-controls{left:auto;right:14px;top:82px}
+  .simulation-map-status{max-width:calc(100% - 162px)}
+  .inspector{bottom:164px;max-width:none}
+  .map-shell:has(.inspector:not([hidden])) .leaflet-control-zoom{display:none}
+  .legend{justify-content:flex-start;gap:12px}.legend span{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){.sidebar{transition:none}}
+
+@media(max-width:330px){.mobile-toggle{width:36px;padding:0;justify-content:center}.mobile-toggle span{display:none}.background-control{margin-left:46px}}
+
+/* One compact row per layer. */
+.layer-list{display:grid;gap:7px}
+.sidebar .layer-item,.sidebar .layer-item.active{margin:0;border-radius:6px}
+.sidebar .layer-main{display:flex;align-items:center;gap:10px;padding:6px 10px;min-height:48px}
+.sidebar .layer-icon{width:24px;height:24px;flex:0 0 24px;background:none}
+.sidebar .layer-icon svg{width:21px;height:21px}
+.sidebar .layer-label{flex:1;min-width:0;min-height:34px;display:flex;align-items:center}
+.sidebar .layer-label strong{font-size:13px;line-height:1.35;font-weight:500}
+.sidebar .layer-main .switch{flex:0 0 32px;width:32px;height:18px}
+.sidebar .layer-main .switch:after{width:12px;height:12px;top:3px;left:3px}
+.sidebar .layer-main .switch[aria-checked=true]:after{transform:translateX(14px)}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition-duration:.14s}

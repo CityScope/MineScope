@@ -8,14 +8,15 @@ A map for community workshops about mining projects, starting with Dominga in La
 
 - Continuous wheel and trackpad zoom, anchored to the pointer.
 - Five backgrounds: topography, satellite, streets, relief and seafloor.
-- Six project layers for locations, ecosystems, water, community notes, case-study themes and project questions.
+- Three geography layers for protected areas, watercourses and catchments, loaded directly from the government SIMBIO services.
+- Six project and community layers for locations, ecosystems, water, community notes, case-study themes and project questions.
 - Community notes grouped by location, topic and sentiment.
 - Selected comments use a large marker and a line to their detail panel that follows map movement and zoom, including in cluster view.
 - Source references and links for map features.
 - Workshop notes with location selection and GeoJSON export.
 - Desktop and mobile layouts, with a collapsible sidebar in portrait orientation.
 
-The opening view uses Satellite with all six layers enabled. Desktop starts at zoom 10, centred at 29.385° S, 71.135° W. Smaller screens fit the six community areas.
+The opening view uses Satellite with all nine layers enabled and the Map layers tab open. Desktop starts at zoom 10, centred at 29.385° S, 71.135° W. Smaller screens fit the six community areas.
 
 ## Run locally
 
@@ -45,6 +46,12 @@ Project reference locations and case-study themes come from the supplied Dominga
 - MineScope use case Dominga: project reference document, not included in the repository or website.
 - MSC Mid-Year Research Report 2026: project reference document, not included in the repository or website.
 
-The supplied PDFs, downloaded Humboldt boundary and SERNAGEOMIN registry are excluded from both the repository history and the website. The app retains project-authored locations, discussion points and generated community examples. It does not draw a conservation boundary or display the third-party tailings registry.
+The supplied PDFs, downloaded Humboldt boundary file and SERNAGEOMIN registry remain excluded from the repository and deployment. Protected-area, watercourse and catchment geometry is requested directly from the original SIMBIO services in the browser and kept in memory. No third-party spatial dataset is mirrored in this repository. The app retains project-authored locations, discussion points and generated community examples; it does not display the third-party tailings registry.
+
+The protected-area layer includes the Humboldt Archipelago, Humboldt Penguin National Reserve, the Chañaral and Choros–Damas marine reserves, La Boca wetland and Cruz Grande. Watercourses and catchments cover the Dominga and Los Choros area; named records can be selected for source details. If a service is unavailable, its layer details offer a retry. The government registry notes that SBAP is the official biodiversity data authority and SIMBIO provides interoperability services.
+
+- [Protected areas · SIMBIO](https://arcgis.mma.gob.cl/server/rest/services/SIMBIO/SIMBIO_AP/MapServer/0)
+- [Watercourses · SIMBIO](https://arcgis.mma.gob.cl/server/rest/services/SIMBIO/SIMBIO_HIDROGRAFIA/MapServer/0)
+- [Catchments · SIMBIO](https://arcgis.mma.gob.cl/server/rest/services/SIMBIO/SIMBIO_DIVISION_CUENCA/MapServer/1)
 
 Background maps come from OpenTopoMap, OpenStreetMap, Esri and GEBCO. Attribution appears on the map, with provider details beside the background selector. Data, reports, logos and map services retain their respective ownership and terms. Logo sources are recorded in `dist/assets/logo-sources.txt`.

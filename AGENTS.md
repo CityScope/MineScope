@@ -16,7 +16,8 @@
 
 - Plain English, compact controls and the existing dark teal, copper and sand palette.
 - Keep the City Science and MIT Media Lab marks secondary to the MineScope wordmark.
-- Preserve the Satellite opening view, all available project layers enabled, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary are excluded from the hosted app.
+- Preserve the Satellite opening view, all available project layers enabled, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary files stay excluded. Protected areas, watercourses and catchments load directly from the government SIMBIO services in the browser.
+- Open the Map layers tab with Geography, Project and Community groups. Keep the live geographic context visible alongside community notes.
 - Keep example community data separate from actual workshop notes and preserve source metadata.
 - Check JavaScript syntax and exercise the affected controls and responsive layouts before deploying.
 

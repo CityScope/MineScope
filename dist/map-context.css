@@ -69,3 +69,20 @@
 .sidebar .layer-main .switch{flex:0 0 32px;width:32px;height:18px}
 .sidebar .layer-main .switch:after{width:12px;height:12px;top:3px;left:3px}
 .sidebar .layer-main .switch[aria-checked=true]:after{transform:translateX(14px)}
+
+.layer-section-label{font-size:10px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;color:#8fa99f;padding:11px 0 3px}
+.layer-section-label:first-child{padding-top:0}
+.layer-label[data-load-state=loading] strong:after,.layer-label[data-load-state=error] strong:after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;margin:0 0 2px 7px;background:#d5b88d}
+.layer-label[data-load-state=error] strong:after{background:#dc947e}
+.geography-list{display:grid;gap:8px;margin:20px 0}
+.geography-place{display:block;width:100%;text-align:left;padding:12px;border:1px solid #ffffff1d;border-radius:6px;background:#1b3d43;color:#dce5d5}
+.geography-place:hover{background:#294c50;border-color:#78c7b255}
+.geography-place strong{font-size:14px;font-weight:500;line-height:1.4;display:block}
+.geography-place span{display:flex;justify-content:space-between;font-size:12px;color:#a1b8ae;margin-top:5px}
+.geography-place b{font-weight:400;color:#cbb28f}
+.geography-source{padding-top:16px;border-top:1px solid #ffffff1b;margin-top:20px}
+.geography-status{font-size:13px;color:#c8d6cd;margin:16px 0}
+.legend .geography-legend i{width:18px;height:10px;border-radius:1px;border:1.5px solid var(--color);background:color-mix(in srgb,var(--color) 12%,transparent)}
+.legend .geography-legend .legend-watercourses{height:0;border:0;border-top:2px solid var(--color);background:none}
+.legend .geography-legend .legend-catchments{background:none;border-style:dashed}
+.geography-legend+.legend-title{padding-left:12px;border-left:1px solid #ffffff25}

@@ -15,7 +15,7 @@ A map for community workshops about mining projects, starting with Dominga in La
 - Workshop notes with location selection and GeoJSON export.
 - Desktop and mobile layouts, with a collapsible sidebar in portrait orientation.
 
-The opening view uses Topography with all six layers enabled. Desktop starts at zoom 10, centred at 29.385° S, 71.135° W. Smaller screens fit the six community areas.
+The opening view uses Satellite with all six layers enabled. Desktop starts at zoom 10, centred at 29.385° S, 71.135° W. Smaller screens fit the six community areas.
 
 ## Run locally
 

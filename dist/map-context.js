@@ -21,7 +21,7 @@
     relief:{title:'Relief',layer:relief,source:'Esri World Hillshade',url:'https://www.arcgis.com/home/item.html?id=1b243539f4514b6ba35e7d995890db1d',description:'A shaded view of ridges, valleys and slopes, with a quiet background for the other layers.',detail:'Global terrain shading from Esri World Hillshade. Available under Esri terms.'},
     seafloor:{title:'Seafloor',layer:seafloor,source:'GEBCO global grid',url:'https://www.gebco.net/data-products/gebco-web-services/web-map-service',description:'Land elevation and ocean depth, showing the coastal shelf and the deeper Pacific seafloor.',detail:'GEBCO 2026 elevation and ocean depth. The grid combines measured and estimated depths at roughly 400–460 metre spacing here. Not for navigation.'}
   };
-  let current='topography';
+  let current='satellite';
   function setBasemap(id){
     if(!backgrounds[id])throw Error('Unknown background map');
     Object.values(backgrounds).forEach(b=>{if(map.hasLayer(b.layer))map.removeLayer(b.layer)});
@@ -46,6 +46,6 @@
   }));
 
   if(activeTab==='evidence')renderEvidence();
-  setBasemap('topography');
+  setBasemap('satellite');
   renderLegend();
 })();

@@ -6,6 +6,7 @@ A map for community workshops about mining projects, starting with Dominga in La
 
 ## The map
 
+- Continuous wheel and trackpad zoom, anchored to the pointer.
 - Five backgrounds: topography, satellite, streets, relief and seafloor.
 - Six project layers for locations, ecosystems, water, community notes, case-study themes and project questions.
 - Community notes grouped by location, topic and sentiment.
@@ -25,6 +26,8 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory dist
 ```
 
 Open <http://127.0.0.1:4173/>. An internet connection is needed for background maps and web fonts.
+
+Run `node --test tests/smooth-zoom.test.cjs` to check wheel input, animation timing, zoom limits and interaction handoffs.
 
 ## Publish updates
 

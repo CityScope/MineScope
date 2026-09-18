@@ -49,7 +49,7 @@ const themes={all:['All topics','Todos los temas'],water:['Water','Agua'],nature
 const noteTypes={question:['Question','Pregunta'],concern:['Concern','Preocupación'],knowledge:['Local knowledge','Conocimiento local'],opportunity:['Opportunity','Oportunidad']};
 let notes=[];try{const d=JSON.parse(localStorage.getItem('minescope-notes-v1')||'[]');if(Array.isArray(d))notes=d.filter(n=>typeof n.id==='string'&&typeof n.text==='string'&&n.text.length<=2000&&Array.isArray(n.coords)&&n.coords.length===2&&n.coords.every(Number.isFinite)&&Math.abs(n.coords[0])<=90&&Math.abs(n.coords[1])<=180&&themes[n.theme]&&noteTypes[n.type]).slice(0,500)}catch{}
 const initialMapView={center:[-29.385,-71.135],zoom:10};
-const map=L.map('map',{zoomControl:false,minZoom:7,maxZoom:17,zoomSnap:.25,zoomDelta:1,wheelPxPerZoomLevel:30,wheelDebounceTime:16}).setView(initialMapView.center,initialMapView.zoom);
+const map=L.map('map',{zoomControl:false,minZoom:7,maxZoom:17,zoomSnap:0,zoomDelta:1,scrollWheelZoom:false,smoothWheelZoom:true}).setView(initialMapView.center,initialMapView.zoom);
 L.control.zoom({position:'bottomleft'}).addTo(map);L.control.scale({position:'bottomleft',imperial:false}).addTo(map);
 const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri — Esri, Maxar, Earthstar Geographics, GIS User Community'});
 const streets=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'});

@@ -9,6 +9,7 @@ A map for community workshops about mining projects, starting with Dominga in La
 - Five backgrounds: topography, satellite, streets, relief and seafloor.
 - Six project layers for locations, ecosystems, water, community notes, case-study themes and project questions.
 - Community notes grouped by location, topic and sentiment.
+- Selected comments use a large marker and a line to their detail panel that follows map movement and zoom, including in cluster view.
 - Source references and links for map features.
 - Workshop notes with location selection and GeoJSON export.
 - Desktop and mobile layouts, with a collapsible sidebar in portrait orientation.

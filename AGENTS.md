@@ -5,7 +5,7 @@
 - The user has designated `https://github.com/CityScope/MineScope` as the permanent repository and GitHub Pages as the live hosting destination.
 - The user explicitly approved a public repository and public GitHub Pages site after learning that CityScope's Free plan does not support Pages from private repositories.
 - The live URL is `https://cityscope.media.mit.edu/MineScope/`, inherited from the organization's existing Pages domain. Do not change the organization's domain settings.
-- Publish completed, verified app changes by committing and pushing to `main`. The Deploy MineScope workflow publishes `dist/` automatically. Wait for deployment success and check the live site before reporting a change as live.
+- Show every change in the local preview first. Deploy only after the user has reviewed the preview and requests deployment. Then publish verified changes by committing and pushing to `main`. The Deploy MineScope workflow publishes `dist/` automatically. Wait for deployment success and check the live site before reporting a change as live.
 - Do not deploy this project to Sites or another host unless the user changes the destination.
 - Keep local work, exports, credentials and browser-collected workshop notes out of the repository and deployment. Only `dist/` is published by the Pages workflow.
 - Do not upload the supplied PDFs or downloaded third-party spatial datasets, including in Git history. The deployment contains project-authored data and the community example generated for this project. Basemap tiles load from their original providers with attribution; do not mirror them.
@@ -14,10 +14,10 @@
 
 ## App conventions
 
-- Plain English, compact controls and the existing dark teal, copper and sand palette.
+- Plain English, compact controls and the Radar design system: Arial, compact controls, neutral surfaces, and blue, green and amber accents.
 - Keep the City Science and MIT Media Lab marks secondary to the MineScope wordmark.
-- Preserve the Satellite opening view, all available project layers enabled, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary files stay excluded. Protected areas, watercourses and catchments load directly from the government SIMBIO services in the browser.
-- Open the Map layers tab with Geography, Project and Community groups. Keep the live geographic context visible alongside community notes.
+- Preserve the Night terrain opening view (Esri World Topographic Map), Satellite as an alternative, only Community layers enabled at startup, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary files stay excluded. Protected areas, watercourses and catchments load directly from the government SIMBIO services in the browser.
+- Open the Map layers tab with Geography, Project and Community groups. Provide Show all / Hide all controls for Geography, Project and Community so users can turn each group on or off.
 - Keep example community data separate from actual workshop notes and preserve source metadata.
 - Check JavaScript syntax and exercise the affected controls and responsive layouts before deploying.
 

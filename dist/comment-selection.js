@@ -4,7 +4,7 @@
   const shell=document.querySelector('.map-shell');
   const inspector=document.querySelector('#inspector');
   const mapElement=document.querySelector('#map');
-  const colors={concerned:'#dc947e',hopeful:'#82b9a7',mixed:'#d6ba7e',neutral:'#8faebd'};
+  const colors={concerned:'#E08063',hopeful:'#5FD3A4',mixed:'#E9BB63',neutral:'#74C2EE'};
   const moving=new Set();
   let marker=null,currentId=null,comment=null,frame=0,highlightedText=null;
 
@@ -22,8 +22,8 @@
   const endpoint=connector.querySelector('circle');
 
   function resolveComment(id){
-    const example=window.MineScopeSimulation.records.find(n=>n.id===id);
-    if(example)return {coords:example.coords,layer:'simulated',color:colors[example.sentiment],label:`Selected note #${String(example.sample).padStart(3,'0')}`};
+    const example=window.MineScopeActivity.records.find(n=>n.id===id);
+    if(example)return {coords:example.coords,layer:example.platform==='community'?'simulated':'social',color:colors[example.sentiment],label:`Selected ${window.MineScopeActivity.labels[example.platform]} note #${String(example.sample).padStart(3,'0')}`,icon:window.MineScopeActivity.icon(example.platform)};
     const workshop=notes.find(n=>n.id===id);
     if(workshop)return {coords:workshop.coords,layer:'community',color:'#b7bd9a',label:'Selected workshop note'};
     const theme=concerns.find(n=>n.id===id);
@@ -46,7 +46,7 @@
       marker=L.marker(comment.coords,{
         zIndexOffset:10000,autoPanOnFocus:false,title:comment.label,alt:comment.label,
         icon:L.divIcon({className:'selected-comment-marker',iconSize:[56,56],iconAnchor:[28,28],
-          html:`<span class="selected-comment-pin" style="--comment-color:${comment.color}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-7l-6 4v-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/><path d="M7 8h10M7 12h7"/></svg></span>`})
+          html:`<span class="selected-comment-pin" style="--comment-color:${comment.color}">${comment.icon||'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12h-9l-5 4v-4H4zM8 8h8M8 12h5"/></svg>'}</span>`})
       }).addTo(map).on('click',()=>inspector.scrollTo({top:0,behavior:'smooth'}));
       marker.getElement().setAttribute('aria-label',comment.label);
       marker.getElement().setAttribute('aria-current','true');

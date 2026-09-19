@@ -15,6 +15,7 @@
 ## App conventions
 
 - Plain English, compact controls and the Radar design system: Arial, compact controls, neutral surfaces, and blue, green and amber accents.
+- Always use the dark theme, including headers, sidebars, dialogs and native controls. Do not follow the system color preference.
 - Keep the City Science and MIT Media Lab marks secondary to the MineScope wordmark.
 - Preserve the Night terrain opening view (Esri World Topographic Map), Satellite as an alternative, only Community layers enabled at startup, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary files stay excluded. Protected areas, watercourses and catchments load directly from the government SIMBIO services in the browser.
 - Open the Map layers tab with Geography, Project and Community groups. Provide Show all / Hide all controls for Geography, Project and Community so users can turn each group on or off.

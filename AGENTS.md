@@ -20,6 +20,7 @@
 - Preserve the Night terrain opening view (Esri World Topographic Map), Satellite as an alternative, only Community layers enabled at startup, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary files stay excluded. Protected areas, watercourses and catchments load directly from the government SIMBIO services in the browser.
 - Open the Map layers tab with Geography, Project and Community groups. Provide Show all / Hide all controls for Geography, Project and Community so users can turn each group on or off.
 - Keep example community data separate from actual workshop notes and preserve source metadata.
+- Kiosk demo starts after 30 seconds idle, tours six settlements every 10 seconds at 2×, and returns to the overview playing at 1× on interaction. Manual Demo and Full screen controls sit in the header; manual tours tolerate pointer movement so both buttons can be used together. Keep automatic touring separate from Unity scene commands.
 - Check JavaScript syntax and exercise the affected controls and responsive layouts before deploying.
 
 ## Local preview

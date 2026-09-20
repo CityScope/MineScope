@@ -33,6 +33,10 @@ Open <http://127.0.0.1:4173/>. An internet connection is needed for background m
 
 Run `node --test tests/*.test.cjs` to check wheel input, animation timing, zoom limits, example-data provenance, collection filters, arrival placement and heat-map calculations.
 
+## Kiosk demo
+
+After 30 seconds without pointer, touch, keyboard or scroll activity, the app starts the timeline at 2× and visits all six settlements in order, changing location every 10 seconds and looping continuously. A pulsing “Running in demo mode” label appears in the header. Interaction ends the tour, returns to the whole area and plays the timeline at 1×. The header’s Demo button starts the tour immediately and keeps it running during pointer movement, so Full screen can be selected next. Stop demo or click/scroll/type elsewhere to return to the overview. Full screen uses the browser’s fullscreen API and can be exited using the same button or Escape. Open dialogs, note placement and hidden tabs suspend the tour. Automatic tour movements do not send Unity scene commands; those remain tied to user location selections.
+
 ## Publish updates
 
 The deployment repository is **[CityScope/MineScope](https://github.com/CityScope/MineScope)**. The repository and website are public. GitHub Pages publishes `dist/` through `.github/workflows/deploy-pages.yml` whenever changes are pushed to `main`. The workflow can also be run manually from the Actions tab. The site inherits CityScope's existing `cityscope.media.mit.edu` domain and uses HTTPS.

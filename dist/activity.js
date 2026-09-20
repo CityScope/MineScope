@@ -117,9 +117,14 @@
   function refresh(){reconcileSelection();S.refresh();A.refreshHeat();updateClock();updateCounts();}
   A.setHeat=value=>{if(!['none',...Object.keys(heatLabels)].includes(value))return;A.state.heat=value;clearArrivals();if(value!=='none')S.setFilters({sentiment:'all'});refresh();if(activeTab==='layers')renderLayers();};
   A.pause=()=>{A.state.playing=false;updateClock();};
+  A.play=(speed=A.state.speed)=>{
+    if(![.5,1,2,4].includes(speed))return;
+    if(A.state.progress>=1){A.state.progress=0;previousTime=A.start;clearArrivals();reconcileSelection();}
+    A.state.speed=speed;A.state.playing=true;$('#timeline-speed').value=String(speed);lastTick=performance.now();updateClock();
+  };
   A.seek=progress=>{A.state.progress=Math.max(0,Math.min(1,progress));A.pause();clearArrivals();previousTime=A.time();if(A.records.some(n=>n.id===selected)&&Date.parse(A.records.find(n=>n.id===selected).collectedAt)>A.time()){$('#inspector').hidden=true;selected=null;}refresh();};
-  $('#timeline-play').onclick=()=>{if(A.state.progress>=1){A.state.progress=0;previousTime=A.start;clearArrivals();reconcileSelection();}A.state.playing=!A.state.playing;lastTick=performance.now();updateClock();};
-  $('#timeline-restart').onclick=()=>{A.seek(0);A.state.playing=true;lastTick=performance.now();updateClock();};
+  $('#timeline-play').onclick=()=>A.state.playing?A.pause():A.play();
+  $('#timeline-restart').onclick=()=>{A.seek(0);A.play();};
   $('#collection-progress').oninput=e=>A.seek(Number(e.target.value)/1000);
   $('#timeline-speed').onchange=e=>A.state.speed=Number(e.target.value);
   $('#timeline-all').onclick=()=>A.seek(1);

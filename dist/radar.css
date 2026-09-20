@@ -90,3 +90,28 @@ a{color:var(--tech)}.button{font-size:12px;font-weight:500;border:1px solid var(
 .pulse-latest-note p{margin:8px 0!important;font-size:12px!important;line-height:1.45!important;color:#DCE6E8!important;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .pulse-latest-place{display:flex;justify-content:space-between;gap:8px;font-size:10px;color:#8DA2A9}
 .pulse-latest-place b{font-weight:400;color:var(--sentiment)}
+
+.app-status{display:flex;align-items:center;gap:14px;flex:0 0 auto}
+.demo-status{display:flex;align-items:center;gap:6px;white-space:nowrap;color:var(--tech);font:10px/1.3 Arial,Helvetica,sans-serif}
+.demo-status[hidden]{display:none}
+.demo-status i{width:6px;height:6px;flex-shrink:0;border-radius:50%;background:var(--tech);animation:demo-pulse 1.8s ease-in-out infinite}
+@keyframes demo-pulse{0%,100%{opacity:.4;box-shadow:0 0 0 0 #6FB4E000}50%{opacity:1;box-shadow:0 0 0 4px #6FB4E022}}
+@media(max-width:1100px){.app-status{flex-direction:column;align-items:flex-start;gap:3px}}
+@media(max-width:700px){.app-status{margin-left:auto;max-width:104px}.app-status .unity-status{margin-left:0}.demo-status{font-size:9px;gap:4px;white-space:normal}}
+@media(prefers-reduced-motion:reduce){.demo-status i{animation:none}}
+.kiosk-controls{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+.topbar .kiosk-controls .button{font-size:10px;padding:5px 8px;min-height:28px}
+.demo-toggle[aria-pressed="true"]{color:var(--focus);border-color:var(--tech);background:#1D303B}
+.fullscreen-toggle{display:flex;align-items:center;justify-content:center;gap:5px}
+.fullscreen-toggle svg{height:13px;width:13px;fill:none;stroke:currentColor;stroke-width:1.5}
+@media(max-width:1100px){.topbar{gap:12px}.fullscreen-label{display:none}}
+@media(max-width:700px){
+  .topbar{height:82px;flex-wrap:wrap;row-gap:3px;padding:6px 12px;align-content:center}
+  .topbar::after{content:"";flex-basis:100%;height:0;order:3}
+  .topbar .brand{order:0}.topbar .brand-partners{order:1}.topbar #add-note{order:2;margin-left:auto}
+  .topbar>.top-spacer{display:none}
+  .app-status{order:4;flex:1;max-width:none;flex-direction:row;gap:10px;margin-left:0}
+  .kiosk-controls{order:5}.topbar .kiosk-controls .button{width:auto;flex:0 0 auto;height:25px;min-height:25px;padding:4px 7px}
+  .demo-status{max-width:107px}.app-status .unity-status{max-width:96px}
+  .workspace{height:calc(100dvh - 82px)}.sidebar{top:82px}.sidebar-scrim:not([hidden]){top:82px}
+}

@@ -12,7 +12,7 @@
   };
   const topicLabels={all:['All topics','Todos los temas'],water:['Water & access','Agua y acceso'],nature:['Nature & coast','Naturaleza y costa'],livelihoods:['Jobs & livelihoods','Empleo y medios de vida'],health:['Health & daily life','Salud y vida cotidiana'],other:['Trust & participation','Confianza y participación']};
   const state={sentiment:'all',area:'all',topic:'all',query:'',mode:'clusters',limit:16,view:'simulation'};
-  let currentItems=[],drawnMarkers=[],selectedSample=null,renderTimer,simReady=false,filtersOpen=false;
+  let currentItems=[],drawnMarkers=[],selectedSample=null,renderTimer,simReady=false,filtersOpen=false,dockArea=null;
   const areaName=a=>lang==='es'?(a.nameEs||a.name):a.name;
   const simLayer=layers.find(l=>l.id==='simulated');
   const active=()=>simLayer.on||layers.find(l=>l.id==='social').on;
@@ -88,19 +88,18 @@
   const oldShowFeature=showFeature;
   showFeature=function(id){if(recordFor(id)){showSample(id);return;}oldShowFeature(id);};
   function focusNote(id){const n=recordFor(id);if(!n)return;A.state.sources.add(n.platform);setLayer(n.platform==='community'?'simulated':'social',true);if(Date.parse(n.collectedAt)>A.time())A.seek?.((Date.parse(n.collectedAt)-A.start)/(A.end-A.start));showSample(id);focusLocation(n.coords,14);if(mobileQuery.matches)$('#sidebar').classList.remove('open');renderFeed();}
-  function flyToArea(id){const a=areaFor(id);if(!a)return;focusLocation(a.coords,12);if(mobileQuery.matches)$('#sidebar').classList.remove('open');}
+  function flyToArea(id,notifyUnity=true){const a=areaFor(id);if(!a)return;showPulse();focusLocation(a.coords,12);if(notifyUnity)window.MineScopeUnity?.select(id);if(mobileQuery.matches)$('#sidebar').classList.remove('open');}
   const mapPadding=mapFocusPadding,focusLocation=focusMapLocation;
   function resetMap(animate=true){
-    if(mobileQuery.matches||innerWidth<=1150){
-      const bounds=L.latLngBounds(areas.map(a=>a.coords));
-      const options={...mapPadding(),maxZoom:initialMapView.zoom,duration:.65};
-      animate?map.flyToBounds(bounds,options):map.fitBounds(bounds,{...options,animate:false});
-    }else{
-      animate?map.flyTo(initialMapView.center,initialMapView.zoom,{duration:.65}):map.setView(initialMapView.center,initialMapView.zoom,{animate:false});
-    }
+    const bounds=L.latLngBounds(areas.map(a=>a.coords));
+    const padding=mapPadding();
+    padding.paddingTopLeft=padding.paddingTopLeft.add([44,44]);
+    padding.paddingBottomRight=padding.paddingBottomRight.add([44,54]);
+    const options={...padding,maxZoom:initialMapView.zoom,duration:.65};
+    animate?map.flyToBounds(bounds,options):map.fitBounds(bounds,{...options,animate:false});
   }
   function setFilters(next,reset=false){if($('#advanced-filters'))filtersOpen=$('#advanced-filters').open;const validSentiment=next.sentiment===undefined||next.sentiment==='all'||sentiments[next.sentiment];const validArea=next.area===undefined||next.area==='all'||areaFor(next.area);const validTopic=next.topic===undefined||Object.hasOwn(topicLabels,next.topic);if(!validSentiment||!validArea||!validTopic||Object.keys(next).some(k=>!['sentiment','area','topic','query'].includes(k))||(next.query!==undefined&&typeof next.query!=='string'))throw Error('Invalid simulation filter');Object.assign(state,next);state.limit=16;if(!active())setLayer('simulated',true);selectedSample=null;update(true);if(reset)resetMap();}
-  function clearFilters(){filtersOpen=false;setFilters({sentiment:'all',area:'all',topic:'all',query:''},true);}
+  function clearFilters(){filtersOpen=false,dockArea=null;setFilters({sentiment:'all',area:'all',topic:'all',query:''},true);}
   function update(full=true){currentItems=filterItems();renderMap();renderDock();renderMapStatus();if(activeTab==='community'&&communityView==='simulation'){if(full)renderCommunity();else renderFeed();}if(selected==='sim-pulse')showPulse();window.dispatchEvent(new Event('minescope:filters'));}
   const renderer=contextRenderer;
   const noteDots=L.layerGroup().addTo(map),clusterShapes=L.layerGroup().addTo(map);
@@ -109,7 +108,7 @@
   function makeCluster(items,coords,kind,area){const size=kind==='area'?Math.min(62,48+Math.sqrt(items.length)):Math.min(43,32+Math.sqrt(items.length));const sentiment=sentiments[items[0].sentiment];const title=kind==='area'?`${areaName(area)} · ${items.length} ${t('notes','notas simuladas')}`:`${t(...sentiment.label)} · ${items.length} ${t('notes','notas simuladas')}`;const html=kind==='area'?`<div class="geo-cluster">${ring(items,size)}<div class="cluster-place">${esc(areaName(area))}</div></div>`:`<div class="sentiment-cluster" style="--sentiment:${sentiment.color};--size:${size}px"><span>${sentiment.icon}</span><strong>${items.length}</strong></div>`;const marker=L.marker(coords,{icon:L.divIcon({className:'cluster-marker',html,iconSize:[size,size],iconAnchor:[size/2,size/2]}),title,zIndexOffset:kind==='area'?400:300}).on('click',()=>{if(placing){openNote(L.latLng(...(area?.coords||coords)));return;}if(kind==='area'){setFilters({area:area.id});flyToArea(area.id);}else{const pts=items.map(n=>n.coords);showSample(items[0].id);map.fitBounds(L.latLngBounds(pts).pad(.35),{...mapPadding(),maxZoom:16,animate:true});}}).on('add',function(){this.getElement()?.setAttribute('aria-label',title);});marker.arrivalCluster={size,kind,counts:counts(items),ids:new Set(items.map(n=>n.id))};marker.addTo(clusterShapes);drawnMarkers.push(marker);}
   function layoutAreaClusters(items){
     const size=map.getSize(),rect=$('#map').getBoundingClientRect(),short=innerHeight<650;
-    const reserved=['#map-display-controls','#inspector','.leaflet-control-zoom','.selected-comment-marker'].map(sel=>$(sel)).filter(el=>el&&!el.hidden).map(el=>{const b=el.getBoundingClientRect();return {left:b.left-rect.left-7,right:b.right-rect.left+7,top:b.top-rect.top-7,bottom:b.bottom-rect.top+7};});
+    const reserved=['.topbar','.map-top','#sidebar','#inspector','.map-tray','.leaflet-control-zoom','.selected-comment-marker'].map(sel=>$(sel)).filter(el=>el&&!el.hidden).map(el=>{const b=el.getBoundingClientRect();return {left:b.left-rect.left-7,right:b.right-rect.left+7,top:b.top-rect.top-7,bottom:b.bottom-rect.top+7};});
     const intersects=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
     const groupsToPlace=areas.map(area=>({area,items:items.filter(n=>n.area===area.id),point:map.latLngToContainerPoint(area.coords)})).filter(g=>g.items.length&&g.point.x>-70&&g.point.x<size.x+70&&g.point.y>-70&&g.point.y<size.y+70).sort((a,b)=>b.point.y-a.point.y);
     const choices=groupsToPlace.map(group=>{
@@ -134,9 +133,9 @@
       if(!visible.contains(n.coords))return;
       const key=n.id+':'+individual;desired.add(key);if(dotCache.has(key))return;
       const sentiment=sentiments[n.sentiment];let dot;
-      if(individual&&n.platform!=='community'){
-        dot=L.marker(n.coords,{icon:L.divIcon({className:'social-map-marker',html:`<span style="--sentiment:${sentiment.color}">${A.icon(n.platform)}</span>`,iconSize:[23,23],iconAnchor:[11.5,11.5]}),title:A.labels[n.platform],zIndexOffset:200});
-      }else dot=L.circleMarker(n.coords,{renderer,radius:individual?4.5:2,color:individual?'#DCE6E8':sentiment.color,weight:individual?1:0,fillColor:sentiment.color,fillOpacity:individual?.92:.38,interactive:individual,bubblingMouseEvents:false});
+      if(individual){
+        dot=L.marker(n.coords,{icon:L.divIcon({className:'note-map-marker',html:`<span class="note-map-pin" data-platform="${n.platform}" style="--sentiment:${sentiment.color}">${A.icon(n.platform)}</span>`,iconSize:[18,18],iconAnchor:[9,9]}),title:A.labels[n.platform],zIndexOffset:200});
+      }else dot=L.circleMarker(n.coords,{renderer,radius:2,color:sentiment.color,weight:0,fillColor:sentiment.color,fillOpacity:.38,interactive:false,bubblingMouseEvents:false});
       if(individual)dot.bindTooltip(`${A.labels[n.platform]} · ${t(...sentiment.label)} · #${n.sample}`,{className:'sim-tooltip',direction:'top'}).on('click',e=>placing?openNote(e.latlng):showSample(n.id));
       dot.addTo(noteDots);dotCache.set(key,dot);
     });
@@ -164,17 +163,43 @@
   const shell=$('.map-shell');
   shell.insertAdjacentHTML('beforeend',`<div class="map-display-controls" id="map-display-controls"></div><section class="place-dock" aria-label="${t('Locations','Explorar lugares')}"><button id="all-places" class="all-places" aria-label="Show all locations">Show all</button><div class="place-cards" id="place-cards"></div></section>`);
   function renderMapStatus(){$('#map-display-controls').innerHTML=`<button data-map-mode="clusters" class="${A.state.heat==='none'&&state.mode==='clusters'?'active':''}" aria-pressed="${A.state.heat==='none'&&state.mode==='clusters'}"><span>◉</span>${t('Clusters','Grupos')}</button><button data-map-mode="notes" class="${A.state.heat==='none'&&state.mode==='notes'?'active':''}" aria-pressed="${A.state.heat==='none'&&state.mode==='notes'}"><span>⠿</span>${t('All notes','Todas las notas')}</button>`;document.querySelectorAll('[data-map-mode]').forEach(b=>b.onclick=()=>{A.setHeat?.('none');state.mode=b.dataset.mapMode;if(!active())setLayer('simulated',true);renderMap();});}
-  function renderDock(){const pool=filterItems(true);$('#all-places').classList.toggle('active',state.area==='all');$('#all-places').setAttribute('aria-pressed',String(state.area==='all'));$('#all-places').onclick=()=>setFilters({area:'all'},true);$('#place-cards').innerHTML=areas.map((a,i)=>{const subset=pool.filter(n=>n.area===a.id);return `<button class="place-card ${state.area===a.id?'active':''}" data-place="${a.id}"><div class="place-card-head"><span class="place-index">0${i+1}</span><strong>${subset.length}</strong></div><span class="place-name">${esc(areaName(a))}</span>${miniBar(subset)}</button>`;}).join('');document.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{setFilters({area:b.dataset.place});flyToArea(b.dataset.place);});}
+  function renderDock(){
+    const pool=filterItems(true),cards=$('#place-cards'),changed=dockArea!==state.area;
+    const overview=$('#all-places');
+    overview.classList.toggle('active',state.area==='all');
+    overview.setAttribute('aria-pressed',String(state.area==='all'));
+    overview.onclick=()=>{setFilters({area:'all'});showPulse();resetMap();};
+    // Keep cards mounted so playback preserves focus, scrolling and selection animation.
+    if(!cards.children.length){
+      cards.innerHTML=areas.map(a=>`<button class="place-card" data-place="${a.id}" aria-pressed="false"><span class="place-current" aria-hidden="true"></span><strong></strong><span class="place-name"></span>${miniBar([])}</button>`).join('');
+      cards.querySelectorAll('[data-place]').forEach(button=>button.onclick=()=>{setFilters({area:button.dataset.place});flyToArea(button.dataset.place);});
+    }
+    areas.forEach(a=>{
+      const button=cards.querySelector(`[data-place="${a.id}"]`),subset=pool.filter(n=>n.area===a.id),selectedArea=state.area===a.id,c=counts(subset);
+      button.classList.toggle('active',selectedArea);
+      button.setAttribute('aria-pressed',String(selectedArea));
+      button.setAttribute('aria-label',`${areaName(a)}, ${subset.length} notes${selectedArea?', selected':''}`);
+      button.title=areaName(a);
+      button.querySelector('strong').textContent=subset.length;
+      button.querySelector('.place-name').textContent=areaName(a);
+      button.querySelectorAll('.sentiment-track i').forEach((bar,i)=>{bar.style.width=`${subset.length?100*c[Object.keys(sentiments)[i]]/subset.length:0}%`;});
+      if(changed&&selectedArea)requestAnimationFrame(()=>{
+        const card=button.getBoundingClientRect(),viewport=cards.getBoundingClientRect();
+        if(card.left<viewport.left||card.right>viewport.right)cards.scrollTo({left:cards.scrollLeft+card.left-viewport.left-(viewport.width-card.width)/2,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+      });
+    });
+    dockArea=state.area;
+  }
 
   sources.push({id:'social-examples',title:['Social-feed examples'],type:['PROJECT DATA'],description:['320 project-authored posts representing X / Twitter, Facebook and Reddit conversations. No real posts, accounts or platform connections are used. Locations, dates and sentiment categories are assigned for the prototype.'],date:['320 posts · 1–18 September 2026']});
   sources.push({id:'simulation',title:['Community notes · example dataset','Aportes comunitarios simulados · 640 notas'],type:['EXAMPLE DATASET','DATOS FICTICIOS DE DEMOSTRACIÓN'],description:['Assigned sentiments and synthetic locations; not collected community evidence.','Sentimientos asignados y ubicaciones sintéticas; no son evidencia comunitaria recopilada.'],date:['640 notes · 6 locations','6 zonas · 4 sentimientos · inglés / español'],url:'simulated-community.geojson'});
   const oldTranslate=translate;translate=function(){oldTranslate();renderMap();renderDock();renderMapStatus();renderLegend();if(selected==='sim-pulse')showPulse();else if(recordFor(selected))showSample(selected);};
   const oldRenderLayers=renderLayers;renderLayers=function(){oldRenderLayers();const simButton=document.querySelector('[data-layer="simulated"]');if(simButton)simButton.closest('.layer-item').classList.add('simulation-layer-item');};
   let renderFrame;map.on('moveend resize',()=>{cancelAnimationFrame(renderFrame);renderFrame=requestAnimationFrame(renderMap)});
-  $('#reset-view').onclick=()=>{setFilters({area:'all'},true);showPulse();};
+  $('#reset-view').onclick=()=>{setFilters({area:'all'});showPulse();resetMap();};
   simReady=true;syncProjectLabels();document.body.classList.add('community-atlas');communityView='simulation';activeTab='layers';switchTab('layers');map.invalidateSize({pan:false});currentItems=filterItems();renderMap();renderMapStatus();renderDock();renderLegend();showPulse();if(innerWidth<=1150){$('#inspector').hidden=true;selected=null;}resetMap(false);
   const mapResizeObserver=new ResizeObserver(()=>{map.invalidateSize({pan:false});if(simReady){if(innerWidth<=1150&&state.area==='all'&&selected==='sim-pulse'){$('#inspector').hidden=true;selected=null;}if(state.area==='all')resetMap(false);else renderMap();}});mapResizeObserver.observe($('#map'));
-  window.MineScopeSim={setFilters,visitArea:id=>{if(!areaFor(id))return;setFilters({area:id});showPulse();flyToArea(id);},showAll:()=>{setFilters({area:'all'});showPulse();resetMap();},items:filterItems,clusters:()=>drawnMarkers,refresh:()=>{renderMap();renderDock();renderMapStatus();renderLegend();if(activeTab==='community'&&communityView==='simulation')renderFeed();if(selected==='sim-pulse')showPulse();},read:()=>({synthetic:true,total:records.length,filtered:filterItems().length,filters:{...state},sentiments:counts(filterItems()),areaCounts:Object.fromEntries(areas.map(a=>[a.id,filterItems().filter(n=>n.area===a.id).length])),mode:state.mode}),setMode:mode=>{if(!['clusters','notes'].includes(mode))throw Error('Invalid display mode');A.setHeat?.('none');state.mode=mode;renderMap();renderMapStatus();return {mode};}};
+  window.MineScopeSim={setFilters,visitArea:id=>{if(!areaFor(id))return;setFilters({area:id});showPulse();flyToArea(id,false);},showAll:()=>{setFilters({area:'all'});showPulse();resetMap();},items:filterItems,clusters:()=>drawnMarkers,refresh:()=>{renderMap();renderDock();renderMapStatus();renderLegend();if(activeTab==='community'&&communityView==='simulation')renderFeed();if(selected==='sim-pulse')showPulse();},read:()=>({synthetic:true,total:records.length,filtered:filterItems().length,filters:{...state},sentiments:counts(filterItems()),areaCounts:Object.fromEntries(areas.map(a=>[a.id,filterItems().filter(n=>n.area===a.id).length])),mode:state.mode}),setMode:mode=>{if(!['clusters','notes'].includes(mode))throw Error('Invalid display mode');A.setHeat?.('none');state.mode=mode;renderMap();renderMapStatus();return {mode};}};
   if(document.modelContext?.registerTool){const lifecycle=new AbortController();const defs=[
     {name:'read_simulated_community',title:'Read simulated community data',description:'Read synthetic note counts, assigned sentiment distribution and active filters. Not real community opinion.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:false},execute:async input=>{if(!input||Object.keys(input).length)throw Error('Expected empty input');return window.MineScopeSim.read();}},
     {name:'filter_simulated_community',title:'Filter simulated community perspectives',description:'Filter the 960 fictional notes by assigned sentiment, topic, discussion area or search text. Changes the visible map, feed and counts.',inputSchema:{type:'object',properties:{sentiment:{type:'string',enum:['all',...Object.keys(sentiments)]},area:{type:'string',enum:['all',...areas.map(a=>a.id)]},topic:{type:'string',enum:Object.keys(topicLabels)},query:{type:'string'}},additionalProperties:false},annotations:{readOnlyHint:false,untrustedContentHint:false},execute:async input=>{setFilters(input);communityView='simulation';switchTab('community');showPulse();return window.MineScopeSim.read();}},

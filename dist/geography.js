@@ -28,7 +28,7 @@
   const number=value=>Number(value).toLocaleString('en',{maximumFractionDigits:1});
   function style(id,feature){
     const color=layers.find(layer=>layer.id===id).color;
-    if(id==='protected')return {color,weight:feature.properties.Codrnap==='WDPA-239'?2:1.8,opacity:.92,fillColor:color,fillOpacity:feature.properties.Codrnap==='WDPA-239'?.11:.18};
+    if(id==='protected')return {color,weight:1.1,opacity:.65,dashArray:'1 5',lineCap:'round',fill:false};
     if(id==='watercourses')return {color,weight:1.35,opacity:.68};
     return {color,weight:1.3,opacity:.68,dashArray:'5 6',fill:false};
   }
@@ -127,7 +127,7 @@
   }
   function orderGeography(){
     // One canvas keeps transparent map areas clickable. Geographic context sits
-    // below project links and note markers, with waterways above area fills.
+    // below project links and note markers, with waterways above the boundary outlines.
     ['watercourses','protected','catchments'].forEach(id=>groups[id].eachLayer(layer=>layer.bringToBack()));
   }
   for(const [id,def] of Object.entries(definitions)){

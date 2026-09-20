@@ -12,7 +12,7 @@ icons.catchments='<path d="m3 8 5-5 9 2 4 8-5 8-9-2zM8 3l3 8 10 2M11 11l-4 8"/>'
 icons.social=icons.community;
 const layers=[
 {id:'social',en:'Social feeds',section:'Community',color:'#74C2EE',on:true},
-{id:'protected',en:'Protected areas',section:'Geography',color:'#5FD3A4',on:false},
+{id:'protected',en:'Protected areas',section:'Geography',color:'#93ADC4',on:false},
 {id:'watercourses',en:'Watercourses',section:'Geography',color:'#74C2EE',on:false},
 {id:'catchments',en:'Catchments',section:'Geography',color:'#9EAFA5',on:false},
 {id:'simulated',section:'Community',en:'Community notes',es:'Aportes comunitarios simulados',sub:['640 notes · 6 locations','640 notas ficticias · 6 lugares'],color:'#74C2EE',on:true,key:['Example dataset','Escenario ficticio de taller']},
@@ -81,7 +81,7 @@ function renderLayers(){
   $('#sidebar-content').innerHTML=`<div class="section-row"><span class="section-label">LAYERS</span><button class="text-action" id="all-layers">${all?'Hide all':'Show all'}</button></div><div class="layer-list">${['Geography','Project','Community'].map(section=>`<div class="layer-section-heading"><span class="layer-section-label">${section}</span><button class="text-action" data-layer-group="${section}" aria-label="${layers.filter(l=>l.section===section).every(l=>l.on)?'Hide':'Show'} all ${section.toLowerCase()} layers">${layers.filter(l=>l.section===section).every(l=>l.on)?'Hide all':'Show all'}</button></div>${layers.filter(l=>l.section===section).map(l=>`<div class="layer-item ${l.on?'active':''}" style="--color:${l.color}"><div class="layer-main"><span class="layer-icon">${svgIcon(icons[l.id])}</span><button class="layer-label" data-info="${l.id}" aria-label="Details: ${esc(l.en)}"><strong>${esc(l.en)}</strong></button><button role="switch" aria-checked="${l.on}" aria-label="${esc(l.en)}" class="switch" data-layer="${l.id}"></button></div></div>`).join('')}`).join('')}</div>`;
   document.querySelectorAll('[data-layer]').forEach(b=>b.onclick=()=>{const id=b.dataset.layer;setLayer(id,!layers.find(l=>l.id===id).on);renderLayers();document.querySelector(`[data-layer="${id}"]`).focus({preventScroll:true})});
   document.querySelectorAll('[data-layer-group]').forEach(button=>button.onclick=()=>{const section=button.dataset.layerGroup,group=layers.filter(l=>l.section===section),on=!group.every(l=>l.on);group.forEach(l=>setLayer(l.id,on));renderLayers();document.querySelector(`[data-layer-group="${section}"]`).focus({preventScroll:true});});
-  $('#all-layers').onclick=()=>{layers.forEach(l=>setLayer(l.id,!all));renderLayers();$('#all-layers').focus({preventScroll:true})};
+  $('#all-layers').onclick=()=>{const next=!layers.every(layer=>layer.on);layers.forEach(l=>setLayer(l.id,next));renderLayers();$('#all-layers').focus({preventScroll:true})};
   document.querySelectorAll('[data-info]').forEach(b=>b.onclick=()=>{showLayer(b.dataset.info);if(mobileQuery.matches&&!['simulated','social','community'].includes(b.dataset.info))setSidebar(false)});
 }
 function setInspector(html,id){selected=id;$('#inspector').hidden=false;$('#inspector').innerHTML=html;$('#inspector').scrollTop=0;$('.inspector-close').onclick=()=>{$('#inspector').hidden=true;selected=null}}
@@ -103,6 +103,16 @@ function showNature(){
 function showLayer(id){if(window.MineScopeGeography?.hasLayer(id))return window.MineScopeGeography.show(id);if(id==='nature')return showNature();if(id==='infrastructure')return showFeature('mine');if(id==='community'){communityView='themes';switchTab('community');return}if(id==='water'){setLayer('water',true);if(activeTab==='layers')renderLayers();return showFeature('water-delivery')}setLayer('risk',true);if(activeTab==='layers')renderLayers();showFeature('habitat-gap')}
 function mapFocusPadding(){
   const narrow=mobileQuery.matches,visible=!$('#inspector').hidden;
+  const tray=document.querySelector('.map-tray');
+  if(tray){
+    const view=$('#map').getBoundingClientRect(),panel=$('#inspector').getBoundingClientRect();
+    const header=$('.topbar').getBoundingClientRect(),toolbar=$('.map-top').getBoundingClientRect();
+    const left=narrow?22:$('#sidebar').getBoundingClientRect().right-view.left+18;
+    const top=Math.max(header.bottom,toolbar.bottom)-view.top+20;
+    const right=!narrow&&visible?view.right-panel.left+18:22;
+    const bottom=Math.max(view.bottom-tray.getBoundingClientRect().top+20,narrow&&visible?view.bottom-panel.top+20:0);
+    return {paddingTopLeft:L.point(left,top),paddingBottomRight:L.point(right,bottom)};
+  }
   const bottom=narrow&&visible?Math.max(55,$('#map').getBoundingClientRect().bottom-$('#inspector').getBoundingClientRect().top+44):55;
   return {paddingTopLeft:L.point(narrow?40:50,narrow&&visible?110:80),paddingBottomRight:L.point(!narrow&&visible?$('#inspector').offsetWidth+58:40,bottom)};
 }

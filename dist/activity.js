@@ -41,7 +41,7 @@
     <section class="collection-timeline" aria-label="Collection timeline">
       <div class="timeline-topline"><div class="timeline-caption"><span class="replay-dot"></span><strong>Collection timeline</strong><span class="timeline-loop">↻ Loop</span></div><div class="timeline-timestamp"><time id="collection-clock"></time><span>Chile time</span></div></div>
       <div class="timeline-main"><button id="timeline-play" class="timeline-play" aria-label="Pause timeline">Ⅱ</button><button id="timeline-restart" title="Restart timeline" aria-label="Restart timeline">↺</button><div class="timeline-track"><div class="timeline-histogram" aria-hidden="true"></div><input type="range" min="0" max="1000" step="1" id="collection-progress" aria-label="Collection date"><div class="timeline-dates"><span>01 Sep</span><span>06 Sep</span><span>12 Sep</span><span>18 Sep 2026</span></div></div><label class="timeline-speed"><span class="sr-only">Playback speed</span><select id="timeline-speed" aria-label="Playback speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label><button id="timeline-all" class="timeline-all">Show all</button></div>
-      <div class="timeline-bottomline"><div class="timeline-sources">${Object.keys(A.labels).map(source=>`<span>${A.icon(source)}<span>${A.labels[source]}</span><b data-source-total="${source}">0</b></span>`).join('')}</div><span class="timeline-count" id="timeline-count"></span></div>
+      <div class="timeline-bottomline"><div class="timeline-sources">${Object.keys(A.labels).map(source=>`<span>${A.icon(source)}<span>${A.labels[source]}</span><b data-source-total="${source}">0</b></span>`).join('')}</div></div>
     </section>`);
   const bins=Array.from({length:72},()=>({community:0,social:0}));
   A.records.forEach(n=>{bins[Math.min(71,Math.floor((Date.parse(n.collectedAt)-A.start)/(A.end-A.start)*72))][n.platform==='community'?'community':'social']++;});
@@ -63,14 +63,14 @@
     $('.timeline-histogram').style.setProperty('--progress',`${A.state.progress*100}%`);
     document.querySelectorAll('[data-bin]').forEach(b=>b.classList.toggle('past',+b.dataset.bin/72<=A.state.progress));
   }
-  function updateCounts(){const items=S.items();Object.keys(A.labels).forEach(p=>{$(`[data-source-total="${p}"]`).textContent=items.filter(n=>n.platform===p).length;});$('#timeline-count').textContent=`${items.length} / 960 notes`;}
+  function updateCounts(){const items=S.items();Object.keys(A.labels).forEach(p=>{$(`[data-source-total="${p}"]`).textContent=items.filter(n=>n.platform===p).length;});}
   function clearArrivals(){arrivalTimers.forEach(clearTimeout);arrivalTimers.clear();arrivalMarkers.forEach(entry=>entry.marker.remove());arrivalMarkers=[];}
   A.syncArrivals=()=>{
     if(!arrivalMarkers.length)return;
     const clusters=S.clusters(),size=map.getSize(),mapRect=$('#map').getBoundingClientRect();
     const relativeRect=el=>{const b=el.getBoundingClientRect();return {left:b.left-mapRect.left-3,right:b.right-mapRect.left+3,top:b.top-mapRect.top-3,bottom:b.bottom-mapRect.top+3};};
     const circles=clusters.map(marker=>({...map.latLngToContainerPoint(marker.getLatLng()),radius:marker.arrivalCluster.size/2}));
-    const rects=[...document.querySelectorAll('.cluster-place,#inspector:not([hidden]),.selected-comment-marker,.leaflet-control-zoom,.map-display-controls')].filter(el=>el.getClientRects().length).map(relativeRect);
+    const rects=[...document.querySelectorAll('.cluster-place,.topbar,.map-top,#sidebar,#inspector:not([hidden]),.map-tray,.selected-comment-marker,.leaflet-control-zoom')].filter(el=>el.getClientRects().length).map(relativeRect);
     for(const entry of arrivalMarkers){
       const {note,marker}=entry,cluster=clusters.find(c=>c.arrivalCluster.ids.has(note.id)),element=marker.getElement();
       let location=null;

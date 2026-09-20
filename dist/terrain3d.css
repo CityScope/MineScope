@@ -1,0 +1,38 @@
+#terrain-view { position:absolute; inset:0; z-index:1; background:#0b1422; }
+.terrain-ready #map { visibility:hidden; pointer-events:none; }
+.maplibregl-canvas { outline:none; }
+.terrain-status { color:#99c9e9; font-size:10px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
+.terrain-status:before { content:''; width:5px; height:5px; border-radius:50%; background:#8bc9f3; box-shadow:0 0 8px #8bc9f366; }
+.terrain-angle { border:1px solid var(--glass-border); background:var(--glass-inset); border-radius:7px; height:30px; padding:0 8px; color:#9ed5f4; font-size:11px; }
+.terrain-marker { padding:0; background:none; border:none; overflow:visible; cursor:pointer; font:12px Arial; }
+.terrain-cluster { width:56px; height:56px; }
+.terrain-ring { display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--ring);padding:2px;box-shadow:0 3px 18px #0005; }
+.terrain-ring strong { display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:#122b39e8;backdrop-filter:blur(8px);font-size:23px;font-weight:500;color:#eaf5f9; }
+.terrain-place-label { display:block;position:absolute;top:63px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#173045bb;border:1px solid #b0dfff25;backdrop-filter:blur(10px);border-radius:5px;padding:4px 7px;color:#dbeaf1;font-size:11px; }
+.terrain-cluster.current .terrain-ring { box-shadow:0 0 0 5px #97cfff22,0 0 35px #97cfff50; }
+.terrain-note { width:18px;height:18px; }
+.terrain-note .note-map-pin { display:grid;place-items:center;width:18px;height:18px;border:1px solid #f3f8ffb3;border-radius:50%;background:#14283de0;color:var(--sentiment); }
+.terrain-note svg { width:11px;height:11px; }
+.terrain-feature-marker { width:24px;height:24px; }
+.terrain-feature { display:grid;place-items:center;width:24px;height:24px;border:1px solid color-mix(in srgb,var(--feature-color) 55%,transparent);border-radius:6px;color:var(--feature-color);background:#182d3be0;font-size:11px; }
+.terrain-selected-marker { z-index:20;width:56px;height:56px; }
+.terrain-selected { display:grid;place-items:center;width:56px;height:56px;background:#112538;border:2px solid #e2f5ff;border-radius:50%;box-shadow:0 0 0 6px color-mix(in srgb,var(--sentiment) 25%,transparent),0 0 26px color-mix(in srgb,var(--sentiment) 40%,transparent);color:var(--sentiment); }
+.terrain-selected svg { width:26px;height:26px; }
+.terrain-connector { position:absolute;inset:0;z-index:550;width:100%;height:100%;pointer-events:none;overflow:visible; }
+.terrain-connector[hidden] { display:none; }.terrain-connector path { fill:none;stroke:var(--comment-color,#a5d5f0);stroke-width:1.5;filter:drop-shadow(0 0 5px #000); }
+.terrain-arrival { width:0;height:0;overflow:visible;z-index:10; }
+.terrain-arrival>svg { overflow:visible;position:absolute;width:1px;height:1px;pointer-events:none; }
+.terrain-arrival path { stroke:var(--sentiment);stroke-width:1.2;fill:none; }
+.terrain-arrival .arrival-badge { position:absolute; }
+.maplibregl-ctrl-attrib { font:9px Arial!important;background:#0d1925aa!important;color:#91a4b4!important;border-radius:6px 0 0 0; }
+.maplibregl-ctrl-attrib a { color:#a7bdcb!important; }.maplibregl-ctrl-bottom-right { z-index:2; }
+.maplibregl-ctrl-attrib-button { filter:invert(.7); }
+@media(max-width:570px){.terrain-angle {order:3;height:25px;padding:0 7px}.map-top .map-display-controls {flex-basis:auto;flex:1;order:4}.terrain-status{font-size:9px}.terrain-ring,.terrain-cluster{width:48px;height:48px}.terrain-ring strong{font-size:20px}.terrain-place-label{top:54px;font-size:10px}}
+
+.terrain-cell {width:32px;height:32px}
+.terrain-cell-ring{display:flex;flex-direction:column;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--sentiment);background:#142838ed;box-shadow:0 0 0 4px #142b3740;color:#ecf4f8}
+.terrain-cell-ring small{font-size:10px;line-height:10px;color:var(--sentiment)}
+.terrain-cell-ring strong{font-size:14px;font-weight:500;line-height:15px}
+body[data-terrain-background="satellite"]{--glass:rgba(18,39,57,.76);--ink-2:#bacbd2;--ink-3:#9fb4c0}
+
+@media(max-width:1100px){.terrain-status{display:none}}

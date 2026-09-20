@@ -7,7 +7,7 @@
 - The live URL is `https://cityscope.media.mit.edu/MineScope/`, inherited from the organization's existing Pages domain. Do not change the organization's domain settings.
 - Show every change in the local preview first. Deploy only after the user has reviewed the preview and requests deployment. Then publish verified changes by committing and pushing to `main`. The Deploy MineScope workflow publishes `dist/` automatically. Wait for deployment success and check the live site before reporting a change as live.
 - Do not deploy this project to Sites or another host unless the user changes the destination.
-- Keep local work, exports, credentials and browser-collected workshop notes out of the repository and deployment. Only `dist/` is published by the Pages workflow.
+- Keep local work, exports, credentials and browser-collected workshop notes out of the repository and deployment. The Unity send key is supplied by URL at runtime, never embedded in source. Only `dist/` is published by the Pages workflow.
 - Do not upload the supplied PDFs or downloaded third-party spatial datasets, including in Git history. The deployment contains project-authored data and the community example generated for this project. Basemap tiles load from their original providers with attribution; do not mirror them.
 - Older local history is retained only on `local-before-publication`. Never push that branch or use `git push --all` or `--mirror`.
 - Use relative asset and data URLs so the app works at `/MineScope/`.
@@ -20,6 +20,7 @@
 - Preserve the Night terrain opening view (Esri World Topographic Map), Satellite as an alternative, only Community layers enabled at startup, and the portrait sidebar drawer. The third-party tailings registry and downloaded conservation boundary files stay excluded. Protected areas, watercourses and catchments load directly from the government SIMBIO services in the browser.
 - Open the Map layers tab with Geography, Project and Community groups. Provide Show all / Hide all controls for Geography, Project and Community so users can turn each group on or off.
 - Keep example community data separate from actual workshop notes and preserve source metadata.
+- Unity integration sends one `site.load` POST per selection of Los Choros or El Trapiche, plus one non-scene authentication check on startup when a key is supplied. Read `?unityKey=...` (or `#unityKey=...`) into memory and remove it from the address bar. Do not persist or embed it. Keep the header status visible for missing keys and connection failures. Do not add camera synchronization, polling, or key-entry controls.
 - Kiosk demo starts after 30 seconds idle, tours six settlements every 10 seconds at 2×, and returns to the overview playing at 1× on interaction. Manual Demo and Full screen controls sit in the header; manual tours tolerate pointer movement so both buttons can be used together. Keep automatic touring separate from Unity scene commands.
 - Check JavaScript syntax and exercise the affected controls and responsive layouts before deploying.
 

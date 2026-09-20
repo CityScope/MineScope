@@ -19,6 +19,7 @@
     transform(){if(!this.origin)return;const scale=this._map.getZoomScale(this._map.getZoom(),this.zoom),p=this._map.latLngToLayerPoint(this.origin);L.DomUtil.setTransform(this.canvas,p,scale);},
     animate(e){if(!this.origin)return;const p=this._map._latLngToNewLayerPoint(this.origin,e.zoom,e.center);L.DomUtil.setTransform(this.canvas,p,this._map.getZoomScale(e.zoom,this.zoom));},
     redraw(){
+      if(window.MineScope3D)return;
       if(!this._map||moving)return;
       const m=this._map,size=m.getSize(),padding=180,w=Math.ceil((size.x+padding*2)/2),h=Math.ceil((size.y+padding*2)/2);
       this.zoom=m.getZoom();this.origin=m.containerPointToLatLng([-padding,-padding]);
@@ -88,7 +89,7 @@
       element.dataset.sentiment=note.sentiment;element.dataset.cluster=cluster?.getElement()?.getAttribute('aria-label')||'';
     }
   };
-  function animateArrivals(before){if(reduced||A.state.heat!=='none'||!A.state.playing)return;
+  function animateArrivals(before){if(window.MineScope3D)return;if(reduced||A.state.heat!=='none'||!A.state.playing)return;
     const arrivals=S.items().filter(n=>Date.parse(n.collectedAt)>before&&map.getBounds().contains(n.coords)).slice(-5);
     arrivals.forEach(note=>{
       const title=`New ${labels[note.sentiment].toLowerCase()} note · ${A.labels[note.platform]}`;

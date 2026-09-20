@@ -19,7 +19,7 @@ A map for community workshops about mining projects, starting with Dominga in La
 - Workshop notes with location selection and GeoJSON export.
 - Desktop and mobile layouts, with a collapsible sidebar in portrait orientation.
 
-The opening view uses Night terrain, a dark slate-blue Esri topographic map, with only the three Community layers enabled and the Map layers tab open. Geography and Project start off; each group has a Show all / Hide all control, alongside the control for all layers. Desktop starts at zoom 10.8, centred at 29.390° S, 71.205° W. Smaller screens fit the six community areas.
+The opening view uses 3D Night terrain, a dark slate-blue OpenFreeMap map with Mapterhorn elevation, with only the three Community layers enabled and the Map layers tab open. Geography and Project start off; each group has a Show all / Hide all control, alongside the control for all layers. The overview starts at zoom 9.95, centred at 29.400° S, 71.270° W, with a 54° pitch. Site visits land at zoom 13.15 and 58° pitch. Night terrain and Satellite are the two backgrounds; the 3D/2D control changes pitch. Elevation is shown at 1.35× vertical scale. Terrain, basemap tiles, labels and fonts load from their original providers; no downloaded terrain package is published.
 
 ## Run locally
 
@@ -36,6 +36,14 @@ Run `node --test tests/*.test.cjs` to check wheel input, animation timing, zoom 
 ## Kiosk demo
 
 After 30 seconds without pointer, touch, keyboard or scroll activity, the app starts the timeline at 2× and visits all six settlements in order, changing location every 10 seconds and looping continuously. A pulsing “Running in demo mode” label appears in the header. Interaction ends the tour, returns to the whole area and plays the timeline at 1×. The header’s Demo button starts the tour immediately and keeps it running during pointer movement, so Full screen can be selected next. Stop demo or click/scroll/type elsewhere to return to the overview. Full screen uses the browser’s fullscreen API and can be exited using the same button or Escape. Open dialogs, note placement and hidden tabs suspend the tour. Automatic tour movements do not send Unity scene commands; those remain tied to user location selections.
+
+## Unity location messages
+
+Select Los Choros or El Trapiche to send one `site.load` POST to `https://mining.mistermatti.com/events`, using `LosChoros_Diorama` or `ElTrapiche_Diorama`. Location cards, map location clusters and the location selector use the same handler. Other locations, individual notes, timeline playback and map pan/zoom send nothing. Repeated location selections each send a new message, as requested; there are no automatic retries or camera commands.
+
+Open the app with `?unityKey=YOUR_KEY` to connect, for example `https://cityscope.media.mit.edu/MineScope/?unityKey=YOUR_KEY`. A `#unityKey=YOUR_KEY` fragment is also accepted. No key is embedded in the app or saved in browser storage. The app reads the key into memory and immediately removes it from the address bar; open the original keyed link again after a reload. A no-referrer policy keeps the page URL out of requests to map and asset providers. The supplied key is sent only as an Authorization header to the fixed Unity server. Without a key, the header displays “API key missing” and no request is sent. There is no key-entry or Unity setup button.
+
+A small header indicator checks the server and key once on startup. The relay authenticates before validating event JSON: an empty envelope receives its specific validation error with a valid key, or 401 with an invalid key, without broadcasting a scene event. This is used because `/health` does not currently allow cross-origin browser access. Any different response is shown as unavailable. There is no polling. Location selections update the indicator with the relay's delivery count: API ready, Unity connected, Unity offline, key rejected, or unavailable. The timestamp is in the indicator tooltip. Delivery confirms the relay handed the message to Unity, not that Unity executed it.
 
 ## Publish updates
 

@@ -125,6 +125,7 @@
     return groupsToPlace.map((group,i)=>{const point=complete?picked[i].point:group.point,loc=map.containerPointToLatLng(point);return {...group,coords:[loc.lat,loc.lng]};});
   }
   function renderMap(){
+    if(window.MineScope3D){window.MineScope3D.refresh();return;}
     clusterShapes.clearLayers();drawnMarkers=[];
     const items=active()?filterItems():[],zoom=map.getZoom(),individual=state.mode==='notes'||zoom>=14;
     const heat=A.state.heat!=='none',visible=map.getBounds().pad(.15);

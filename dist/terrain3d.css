@@ -10,9 +10,8 @@
 .terrain-ring strong { display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:#122b39e8;backdrop-filter:blur(8px);font-size:23px;font-weight:500;color:#eaf5f9; }
 .terrain-place-label { display:block;position:absolute;top:63px;left:50%;transform:translateX(-50%);white-space:nowrap;background:#173045bb;border:1px solid #b0dfff25;backdrop-filter:blur(10px);border-radius:5px;padding:4px 7px;color:#dbeaf1;font-size:11px; }
 .terrain-cluster.current .terrain-ring { box-shadow:0 0 0 5px #97cfff22,0 0 35px #97cfff50; }
-.terrain-note { width:18px;height:18px; }
-.terrain-note .note-map-pin { display:grid;place-items:center;width:18px;height:18px;border:1px solid #f3f8ffb3;border-radius:50%;background:#14283de0;color:var(--sentiment); }
-.terrain-note svg { width:11px;height:11px; }
+.terrain-note { display:grid;place-items:center;width:44px;height:44px;border-radius:50%; }
+.terrain-note:hover,.terrain-note:focus-visible { z-index:15; }
 .terrain-feature-marker { width:24px;height:24px; }
 .terrain-feature { display:grid;place-items:center;width:24px;height:24px;border:1px solid color-mix(in srgb,var(--feature-color) 55%,transparent);border-radius:6px;color:var(--feature-color);background:#182d3be0;font-size:11px; }
 .terrain-selected-marker { z-index:20;width:56px;height:56px; }
@@ -29,10 +28,8 @@
 .maplibregl-ctrl-attrib-button { filter:invert(.7); }
 @media(max-width:570px){.terrain-angle {order:3;height:25px;padding:0 7px}.map-top .map-display-controls {flex-basis:auto;flex:1;order:4}.terrain-status{font-size:9px}.terrain-ring,.terrain-cluster{width:48px;height:48px}.terrain-ring strong{font-size:20px}.terrain-place-label{top:54px;font-size:10px}}
 
-.terrain-cell {width:32px;height:32px}
-.terrain-cell-ring{display:flex;flex-direction:column;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;border:1.5px solid var(--sentiment);background:#142838ed;box-shadow:0 0 0 4px #142b3740;color:#ecf4f8}
-.terrain-cell-ring small{font-size:10px;line-height:10px;color:var(--sentiment)}
-.terrain-cell-ring strong{font-size:14px;font-weight:500;line-height:15px}
 body[data-terrain-background="satellite"]{--glass:rgba(18,39,57,.76);--ink-2:#bacbd2;--ink-3:#9fb4c0}
 
 @media(max-width:1100px){.terrain-status{display:none}}
+
+.terrain-retry{font-size:10px;padding:4px 7px}.terrain-retry[hidden]{display:none} #note-recovery{font-size:10px;padding:4px 7px;color:#E9BB63}

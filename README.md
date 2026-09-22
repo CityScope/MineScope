@@ -7,6 +7,7 @@ A map for community workshops about mining projects, starting with Dominga in La
 ## The map
 
 - Continuous wheel and trackpad zoom, anchored to the pointer.
+- Community notes move directly from location totals to a brief individual-dot view, then larger icons. Terrain zoom 11.35 starts dots and zoom 12 starts icons; 2D fallback uses equivalent thresholds one level higher. Icons are 32 px with 44 px targets and hover/keyboard-focus highlighting.
 - Four backgrounds: Night terrain, Satellite, Map and Topography.
 - Three geography layers for protected areas, watercourses and catchments, loaded directly from the government SIMBIO services.
 - Seven project and community layers for locations, ecosystems, water, community notes, case-study themes and project questions.
@@ -44,6 +45,14 @@ Select Los Choros or El Trapiche to send one `site.load` POST to `https://mining
 Open the app with `?unityKey=YOUR_KEY` to connect, for example `https://cityscope.media.mit.edu/MineScope/?unityKey=YOUR_KEY`. A `#unityKey=YOUR_KEY` fragment is also accepted. No key is embedded in the app or saved in browser storage. The app reads the key into memory and immediately removes it from the address bar; open the original keyed link again after a reload. A no-referrer policy keeps the page URL out of requests to map and asset providers. The supplied key is sent only as an Authorization header to the fixed Unity server. Without a key, the header displays “API key missing” and no request is sent. There is no key-entry or Unity setup button.
 
 A small header indicator checks the server and key once on startup. The relay authenticates before validating event JSON: an empty envelope receives its specific validation error with a valid key, or 401 with an invalid key, without broadcasting a scene event. This is used because `/health` does not currently allow cross-origin browser access. Any different response is shown as unavailable. There is no polling. Location selections update the indicator with the relay's delivery count: API ready, Unity connected, Unity offline, key rejected, or unavailable. The timestamp is in the indicator tooltip. Delivery confirms the relay handed the message to Unity, not that Unity executed it.
+
+## Recovery and saved-note reliability
+
+Workshop collections are validated one record at a time. Recoverable notes remain available when another entry is malformed. Before replacement, the previous good collection is backed up locally; damaged original data is retained separately. If preservation or saving fails, the current collection and draft remain intact. A Note recovery button offers the original collection for download. A stale tab is prevented from silently replacing a newer saved collection.
+
+A graphics reset recreates the 3D renderer once with the current view and background. Repeated failure or missing WebGL leaves an interactive 2D map and a Retry 3D control. The timeline resumes after cached browser-history restoration and suspends its timer while hidden or paused. Terrain refreshes are coalesced and unchanged source data is not uploaded repeatedly.
+
+Run the additional browser checks described in `tests/README-reliability.md` before publishing changes to these paths.
 
 ## Publish updates
 

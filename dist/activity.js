@@ -117,11 +117,11 @@
 
   function refresh(){reconcileSelection();S.refresh();A.refreshHeat();updateClock();updateCounts();}
   A.setHeat=value=>{if(!['none',...Object.keys(heatLabels)].includes(value))return;A.state.heat=value;clearArrivals();if(value!=='none')S.setFilters({sentiment:'all'});refresh();if(activeTab==='layers')renderLayers();};
-  A.pause=()=>{A.state.playing=false;updateClock();};
+  A.pause=()=>{A.state.playing=false;syncPlaybackTimer();updateClock();};
   A.play=(speed=A.state.speed)=>{
     if(![.5,1,2,4].includes(speed))return;
     if(A.state.progress>=1){A.state.progress=0;previousTime=A.start;clearArrivals();reconcileSelection();}
-    A.state.speed=speed;A.state.playing=true;$('#timeline-speed').value=String(speed);lastTick=performance.now();updateClock();
+    A.state.speed=speed;A.state.playing=true;$('#timeline-speed').value=String(speed);lastTick=performance.now();syncPlaybackTimer();updateClock();
   };
   A.seek=progress=>{A.state.progress=Math.max(0,Math.min(1,progress));A.pause();clearArrivals();previousTime=A.time();if(A.records.some(n=>n.id===selected)&&Date.parse(A.records.find(n=>n.id===selected).collectedAt)>A.time()){$('#inspector').hidden=true;selected=null;}refresh();};
   $('#timeline-play').onclick=()=>A.state.playing?A.pause():A.play();
@@ -138,11 +138,21 @@
   const oldSetLayer=setLayer;setLayer=function(...args){if(['social','simulated'].includes(args[0]))clearArrivals();oldSetLayer(...args);A.refreshHeat();updateCounts();};
   const oldStartPlacement=startPlacement;startPlacement=function(){A.pause();oldStartPlacement();};$('#add-note').onclick=startPlacement;
   // Clock updates are cheap; marker and density updates are limited to once a second.
-  const timer=setInterval(()=>{const now=performance.now(),elapsed=Math.min(1500,now-lastTick);lastTick=now;if(document.hidden||!A.state.playing||moving||placing||$('#modal').open)return;A.state.progress+=elapsed/180000*A.state.speed;
+  let timer=null,pageActive=true;
+  function tick(){const now=performance.now(),elapsed=Math.min(1500,now-lastTick);lastTick=now;if(document.hidden||!A.state.playing||moving||placing||$('#modal').open)return;A.state.progress+=elapsed/180000*A.state.speed;
     if(A.state.progress>1){A.state.progress=0;previousTime=A.start;clearArrivals();reconcileSelection();}
     updateClock();if(now-lastPaint>=1000){lastPaint=now;refresh();animateArrivals(previousTime);previousTime=A.time();}
-  },150);
-  window.addEventListener('pagehide',()=>{clearInterval(timer);clearArrivals();},{once:true});
+  }
+  function syncPlaybackTimer(){
+    const run=pageActive&&!document.hidden&&A.state.playing;
+    if(!run){if(timer!==null)clearInterval(timer);timer=null;clearArrivals();return;}
+    if(timer!==null)return;
+    lastTick=performance.now();previousTime=A.time();timer=setInterval(tick,150);
+  }
+  window.addEventListener('pagehide',()=>{pageActive=false;syncPlaybackTimer();});
+  window.addEventListener('pageshow',()=>{pageActive=true;syncPlaybackTimer();});
+  document.addEventListener('visibilitychange',syncPlaybackTimer);
+  syncPlaybackTimer();
   window.addEventListener('minescope:filters',()=>{clearArrivals();A.refreshHeat();updateCounts();});
   renderLayers();refresh();
   A.read=()=>({exampleData:true,playing:A.state.playing,progress:A.state.progress,time:new Date(A.time()).toISOString(),heat:A.state.heat,sources:[...A.state.sources],visible:S.items().length,total:A.records.length,sourceCounts:Object.fromEntries(Object.keys(A.labels).map(p=>[p,S.items().filter(n=>n.platform===p).length])),heatPoints:S.items().filter(n=>['balance','density'].includes(A.state.heat)||n.sentiment===A.state.heat).length});

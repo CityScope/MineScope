@@ -127,29 +127,25 @@
   function renderMap(){
     if(window.MineScope3D){window.MineScope3D.refresh();return;}
     clusterShapes.clearLayers();drawnMarkers=[];
-    const items=active()?filterItems():[],zoom=map.getZoom(),individual=state.mode==='notes'||zoom>=14;
+    // The model map runs one zoom level above the terrain map.
+    const items=active()?filterItems():[],zoom=map.getZoom(),individual=state.mode==='notes'||zoom>=13,regional=zoom<12.35;
     const heat=A.state.heat!=='none',visible=map.getBounds().pad(.15);
     const desired=new Set();
-    if(!heat)items.forEach(n=>{
+    if(!heat&&(individual||!regional))items.forEach(n=>{
       if(!visible.contains(n.coords))return;
       const key=n.id+':'+individual;desired.add(key);if(dotCache.has(key))return;
       const sentiment=sentiments[n.sentiment];let dot;
       if(individual){
-        dot=L.marker(n.coords,{icon:L.divIcon({className:'note-map-marker',html:`<span class="note-map-pin" data-platform="${n.platform}" style="--sentiment:${sentiment.color}">${A.icon(n.platform)}</span>`,iconSize:[18,18],iconAnchor:[9,9]}),title:A.labels[n.platform],zIndexOffset:200});
-      }else dot=L.circleMarker(n.coords,{renderer,radius:2,color:sentiment.color,weight:0,fillColor:sentiment.color,fillOpacity:.38,interactive:false,bubblingMouseEvents:false});
+        dot=L.marker(n.coords,{icon:L.divIcon({className:'note-map-marker',html:`<span class="note-map-pin" data-platform="${n.platform}" style="--sentiment:${sentiment.color}">${A.icon(n.platform)}</span>`,iconSize:[44,44],iconAnchor:[22,22]}),title:A.labels[n.platform],zIndexOffset:200});
+      }else dot=L.circleMarker(n.coords,{renderer,radius:3,color:sentiment.color,weight:0,fillColor:sentiment.color,fillOpacity:.85,interactive:false,bubblingMouseEvents:false});
       if(individual)dot.bindTooltip(`${A.labels[n.platform]} · ${t(...sentiment.label)} · #${n.sample}`,{className:'sim-tooltip',direction:'top'}).on('click',e=>placing?openNote(e.latlng):showSample(n.id));
       dot.addTo(noteDots);dotCache.set(key,dot);
     });
     dotCache.forEach((dot,key)=>{if(!desired.has(key)){noteDots.removeLayer(dot);dotCache.delete(key);}});
-    if(!individual&&!heat){
-      if(zoom<11.75){
-        const key=map.getCenter().toString()+zoom+map.getSize().toString()+$('#inspector').hidden+selected;
-        if(!layoutCache||layoutCache.key!==key)layoutCache={key,positions:layoutAreaClusters(records).map(({area,coords})=>({area,coords}))};
-        layoutCache.positions.forEach(({area,coords})=>{const subset=items.filter(n=>n.area===area.id);if(subset.length){if(map.latLngToContainerPoint(area.coords).distanceTo(map.latLngToContainerPoint(coords))>14)L.polyline([area.coords,coords],{renderer,color:'#8DA2A9',weight:1,opacity:.65,dashArray:'3 4',interactive:false}).addTo(clusterShapes);makeCluster(subset,coords,'area',area);}});
-      }else{
-        const cells=new Map();items.filter(n=>visible.contains(n.coords)).forEach(n=>{const p=map.project(n.coords,zoom),key=`${n.sentiment}:${Math.floor(p.x/96)}:${Math.floor(p.y/96)}`;if(!cells.has(key))cells.set(key,[]);cells.get(key).push(n);});
-        cells.forEach((subset,key)=>{const [,gx,gy]=key.split(':'),slot=Object.keys(sentiments).indexOf(subset[0].sentiment);const point=map.unproject(L.point(Number(gx)*96+24+(slot%2)*48,Number(gy)*96+24+Math.floor(slot/2)*48),zoom);makeCluster(subset,[point.lat,point.lng],'sentiment');});
-      }
+    if(!individual&&!heat&&regional){
+      const key=map.getCenter().toString()+zoom+map.getSize().toString()+$('#inspector').hidden+selected;
+      if(!layoutCache||layoutCache.key!==key)layoutCache={key,positions:layoutAreaClusters(records).map(({area,coords})=>({area,coords}))};
+      layoutCache.positions.forEach(({area,coords})=>{const subset=items.filter(n=>n.area===area.id);if(subset.length){if(map.latLngToContainerPoint(area.coords).distanceTo(map.latLngToContainerPoint(coords))>14)L.polyline([area.coords,coords],{renderer,color:'#8DA2A9',weight:1,opacity:.65,dashArray:'3 4',interactive:false}).addTo(clusterShapes);makeCluster(subset,coords,'area',area);}});
     }
     document.querySelectorAll('[data-map-mode]').forEach(b=>{b.classList.toggle('active',!heat&&state.mode===b.dataset.mapMode);b.setAttribute('aria-pressed',String(!heat&&state.mode===b.dataset.mapMode));});
     A.syncArrivals?.();

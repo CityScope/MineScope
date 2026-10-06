@@ -25,11 +25,11 @@ jobs:
         uses: actions/checkout@v6
       - name: Check JavaScript
         run: |
-          for file in dist/*.js; do
+          for file in dist/*.js dist/scenario/*.mjs; do
             node --check "$file"
           done
       - name: Check zoom and collection data
-        run: node --test tests/*.test.cjs
+        run: node --test tests/*.test.cjs tests/scenario-*.test.mjs
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload the site

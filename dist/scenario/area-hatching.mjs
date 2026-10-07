@@ -1,14 +1,15 @@
 import * as THREE from 'three';
-import {surfaceHeight,habitatBoundary} from './model.mjs';
+import {surfaceHeight,habitatBoundary,bounds} from './model.mjs?v=20261007-ws-status1';
+import {maskedIndices} from './mesh-budget.mjs?v=20261007-ws-status1';
 
 export function createHatchedArea(scene,field,color,direction,opacity) {
-  const geometry=new THREE.PlaneGeometry(22,13,256,152);geometry.rotateX(-Math.PI/2);
+  const geometry=new THREE.PlaneGeometry(bounds.width,bounds.depth,256,256);geometry.rotateX(-Math.PI/2);
   const positions=geometry.attributes.position,mask=new Float32Array(positions.count);
   for(let i=0;i<positions.count;i++) {
     const x=positions.getX(i),z=positions.getZ(i);
     positions.setY(i,surfaceHeight(x,z)+.14);mask[i]=field(x,z);
   }
-  geometry.setAttribute('areaMask',new THREE.BufferAttribute(mask,1));geometry.computeBoundingSphere();
+  geometry.setAttribute('areaMask',new THREE.BufferAttribute(mask,1));geometry.setIndex(new THREE.BufferAttribute(maskedIndices(256,mask),1));geometry.computeBoundingSphere();
   const material=new THREE.ShaderMaterial({
     uniforms:{color:{value:new THREE.Color(color)},axis:{value:new THREE.Vector2(...direction).normalize()},opacity:{value:opacity},boundary:{value:habitatBoundary}},
     vertexShader:`attribute float areaMask;varying float vMask;varying vec2 vGround;

@@ -2,7 +2,7 @@ export function createFrameProfile(canvas,renderer) {
   const frames=[],costs=[];let previous=0,input=0,paint=0;
   renderer.info.autoReset=false;
   return {
-    input(){input=performance.now();},
+    input(){if(!input)input=performance.now();},
     start(){renderer.info.reset();return performance.now();},
     frame(start){
       const end=performance.now();

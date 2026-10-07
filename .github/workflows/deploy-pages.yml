@@ -23,9 +23,13 @@ jobs:
     steps:
       - name: Check out the site
         uses: actions/checkout@v6
+      - name: Set up test runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
       - name: Check JavaScript
         run: |
-          for file in dist/*.js dist/scenario/*.mjs; do
+          for file in dist/*.js dist/scenario/*.mjs tools/*.mjs; do
             node --check "$file"
           done
       - name: Check zoom and collection data

@@ -4,10 +4,10 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="referrer" content="no-referrer">
   <title>MineScope — Scenario table</title><meta name="description" content="Move a tailings piece on a printed terrain model and explore real-time trade-offs.">
   <script src="../unity-config.js?v=20260920-url1"></script>
-  <link rel="stylesheet" href="style.css?v=20261005-protection-info1">
+  <link rel="stylesheet" href="style.css?v=20261007-ws-status1">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
   <script src="../unity.js?v=20260920-url1" defer></script>
-  <script type="module" src="table.mjs?v=20261005-protection-info1"></script>
+  <script type="module" src="table.mjs?v=20261007-ws-status1"></script>
 </head>
 <body>
   <svg class="icon-library" aria-hidden="true"><defs>
@@ -27,7 +27,8 @@
     <a class="brand" href="../"><svg><use href="#i-mountain"/></svg>MineScope<span>.</span></a>
     <div class="partners"><span>CityScope</span><img src="../assets/city-science.svg" alt="MIT City Science"><img src="../assets/mit-media-lab.svg" alt="MIT Media Lab"></div>
     <span class="location">Dominga · La Higuera, Chile</span>
-    <div class="unity-status" id="unity-status" role="status"><i></i><span>API key missing</span></div>
+    <span id="table-link-status" class="table-link-status" role="status" aria-live="polite" aria-atomic="true" data-status="unconfigured" title="The physical table link is waiting for a server endpoint.">WebSocket · Not configured</span>
+    <div class="unity-status" id="unity-status" role="status" hidden><i></i><span>API key missing</span></div>
     <a class="button map-link" href="../">Project map ↗</a>
     <button class="button" id="reset" aria-label="Reset scenario"><svg><use href="#i-rotate"/></svg><span>Reset</span></button>
     <button class="button" id="fullscreen" aria-label="Enter full screen"><svg><use href="#i-expand"/></svg><span>Full screen</span></button>
@@ -37,13 +38,13 @@
     <section class="metrics-panel" id="physical-display" aria-label="Scenario indicators on the table display">
       <div class="metrics-heading"><div><span class="eyebrow">YOUR SCENARIO</span><button class="live-state" id="live-state" aria-live="polite"><i></i><span>Candidate site</span></button></div><div class="metrics-actions"><button class="button" id="compare"><svg><use href="#i-monitor"/></svg>Compare El Negrillo</button></div></div>
       <div class="metrics-grid" id="metrics"></div>
-      <div class="screen-legend" aria-label="Projected impact legend"><span><i style="--color:#E08063"></i>Pollution</span><span><i style="--color:#E9BB63"></i>Dust</span><span><i style="--color:#a9bafa"></i>Noise</span><span><i class="area-legend" style="--color:#3d977b"></i>Habitat</span><span><i class="area-legend land-legend" style="--color:#b88e49"></i>Productive land</span><span><i class="protection-legend"></i>Protection</span></div>
+      <div class="screen-legend" aria-label="Projected impact legend"><span><i style="--color:#E08063"></i>Pollution</span><span><i style="--color:#E9BB63"></i>Dust</span><span><i style="--color:#a9bafa"></i>Noise</span><span><i class="area-legend" style="--color:#3d977b"></i>Protected areas</span><span><i class="area-legend land-legend" style="--color:#b88e49"></i>Productive land</span><span><i class="protection-legend"></i>Protection</span></div>
     </section>
       <div class="loading" id="loading" role="status"><span class="spinner"></span>Preparing the terrain…</div>
       <canvas id="terrain-canvas" aria-label="3D terrain. Drag the amber tailings piece, or select a piece and use the arrow keys. Drag empty terrain to look from side to side; scroll to zoom."></canvas>
       <div id="model-labels" class="model-labels"></div>
-      <div class="stage-bottom"><div class="stage-readout"><button id="pipeline-detail" class="pipeline-badge">Pipeline <strong id="pipeline-km">— km</strong> ↗</button></div><div class="view-tools" role="group" aria-label="Model view"><button id="rotate-view" class="button" aria-label="Rotate view left and right" aria-pressed="false"><svg><use href="#i-rotate"/></svg>Rotate</button><button id="zoom-in" class="button" aria-label="Zoom in">＋</button><button id="zoom-out" class="button" aria-label="Zoom out">−</button><button id="layers" class="button" aria-expanded="false">Layers ▱</button></div></div>
-      <div id="layer-menu" class="layer-menu" hidden><strong>Projected layers</strong><label><input type="checkbox" data-layer="protection" checked>Protections</label><label><input type="checkbox" data-layer="pollution" checked>Water pollution</label><label><input type="checkbox" data-layer="dust" checked>Dust</label><label><input type="checkbox" data-layer="noise" checked>Noise</label><label><input type="checkbox" data-layer="water" checked>Water pathways</label><label><input type="checkbox" data-layer="habitat" checked>Habitat patches</label><label><input type="checkbox" data-layer="communities" checked>Communities</label><label><input type="checkbox" data-layer="pipeline" checked>Pipeline</label><label><input type="checkbox" data-layer="land" checked>Productive land</label></div>
+      <div class="stage-bottom"><div class="stage-readout"><button id="pipeline-detail" class="pipeline-badge">Pipeline <strong id="pipeline-km">— km</strong> ↗</button><button class="pipeline-badge geography-badge" id="geography-detail" aria-label="Study area and data sources">Geography ↗</button></div><div class="view-tools" role="group" aria-label="Model view"><button id="rotate-view" class="button" aria-label="Rotate view left and right" aria-pressed="false"><svg><use href="#i-rotate"/></svg>Rotate</button><button id="zoom-in" class="button" aria-label="Zoom in">＋</button><button id="zoom-out" class="button" aria-label="Zoom out">−</button><button id="layers" class="button" aria-expanded="false">Layers ▱</button></div></div>
+      <div id="layer-menu" class="layer-menu" hidden><strong>Projected layers</strong><label><input type="checkbox" data-layer="protection" checked>Protections</label><label><input type="checkbox" data-layer="pollution" checked>Water pollution</label><label><input type="checkbox" data-layer="dust" checked>Dust</label><label><input type="checkbox" data-layer="noise" checked>Noise</label><label><input type="checkbox" data-layer="water" checked>Watercourses</label><label><input type="checkbox" data-layer="catchments" checked>Catchments</label><label><input type="checkbox" data-layer="habitat" checked>Protected areas</label><label><input type="checkbox" data-layer="communities" checked>Communities</label><label><input type="checkbox" data-layer="pipeline" checked>Pipeline</label><label><input type="checkbox" data-layer="land" checked>Productive land</label></div>
     </section>
     <section class="intervention-panel" aria-label="Fund allocations"><div class="tray-heading"><div class="tray-title"><span class="eyebrow">ALLOCATE TO PROTECTION</span><button type="button" class="protection-info" id="protection-info" aria-label="About protections" title="About protections" aria-haspopup="dialog" aria-controls="detail-dialog"><svg aria-hidden="true"><use href="#i-info"/></svg></button></div><span id="token-count"></span></div><div class="token-tray" id="token-tray"></div></section>
   </main>

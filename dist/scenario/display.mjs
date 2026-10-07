@@ -12,7 +12,7 @@ export function screenMatrix(points,width,height) {
     0,0,1,0,p0.x,p0.y,0,1];
 }
 
-export function createDisplay(scene,element,stage) {
+export function createDisplay(scene,element,stage,depth=13) {
   const group=new THREE.Group();scene.add(group);
   const casing=new THREE.MeshPhysicalMaterial({color:'#122332',roughness:.45,metalness:.25,clearcoat:.2});
   const back=new THREE.Mesh(new THREE.BoxGeometry(1,1,.28),casing);back.castShadow=true;group.add(back);
@@ -29,13 +29,14 @@ export function createDisplay(scene,element,stage) {
     const post=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,1,24),casing);post.position.x=x;post.position.z=-.14;group.add(post);posts.push(post);
   }
   const base=new THREE.Mesh(new THREE.BoxGeometry(9,.18,1.1),casing);base.position.set(0,-.3,-.12);group.add(base);
+  const screenZ=-depth/2-1.4;
   let width=20,height=6.2,bottom=3.2,domWidth=1000,domHeight=310,projectedBounds;
   function resize() {
     const portrait=stage.clientWidth/stage.clientHeight<1;
     width=portrait?20.4:20;height=portrait?11.56:6.2;domWidth=portrait?600:1000;domHeight=portrait?340:310;
     element.classList.toggle('portrait-display',portrait);
     element.style.width=`${domWidth}px`;element.style.height=`${domHeight}px`;
-    group.position.set(0,0,-7.9);
+    group.position.set(0,0,screenZ);
     back.scale.set(width+.45,height+.45,1);back.position.y=bottom+height/2;
     screen.scale.set(width,height,1);screen.position.set(0,bottom+height/2,.151);
     screenLight.width=width*.92;screenLight.height=height*.85;screenLight.position.set(0,bottom+height/2,.3);screenLight.lookAt(0,.6,6);
@@ -44,13 +45,13 @@ export function createDisplay(scene,element,stage) {
   }
   function update(camera) {
     const points=[[-width/2,bottom+height],[width/2,bottom+height],[width/2,bottom],[-width/2,bottom]].map(([x,y])=>{
-      const p=new THREE.Vector3(x,y,-7.744).project(camera);
+      const p=new THREE.Vector3(x,y,screenZ+.156).project(camera);
       return {x:(p.x*.5+.5)*stage.clientWidth,y:(-.5*p.y+.5)*stage.clientHeight,z:p.z};
     });
-    const visible=camera.position.z>-7.744&&points.every(p=>p.z<1&&p.z>-1);
+    const visible=camera.position.z>screenZ+.156&&points.every(p=>p.z<1&&p.z>-1);
     projectedBounds=visible?{left:Math.min(...points.map(p=>p.x)),right:Math.max(...points.map(p=>p.x)),top:Math.min(...points.map(p=>p.y)),bottom:Math.max(...points.map(p=>p.y))}:null;
     element.style.visibility=visible?'visible':'hidden';
     if(visible)element.style.transform=`matrix3d(${screenMatrix(points,domWidth,domHeight).join(',')})`;
   }
-  resize();return {resize,update,get top(){return bottom+height+.3;},get projectedBounds(){return projectedBounds;}};
+  resize();return {resize,update,get top(){return bottom+height+.3;},get framingPoints(){return [-width/2-.3,width/2+.3].flatMap(x=>[bottom-.3,bottom+height+.3].map(y=>[x,y,screenZ]));},get projectedBounds(){return projectedBounds;}};
 }

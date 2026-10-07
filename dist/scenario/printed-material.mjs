@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
 export function printedMaterial(color,options={}) {
-  const mat=new THREE.MeshPhysicalMaterial({color,roughness:.84,metalness:0,clearcoat:.025,clearcoatRoughness:.8,
-    sheen:.06,sheenColor:'#fff0dc',sheenRoughness:.9,...options});
+  const {physical=false,...properties}=options;
+  const mat=physical?new THREE.MeshPhysicalMaterial({color,roughness:.84,metalness:0,clearcoat:.025,clearcoatRoughness:.8,sheen:.06,sheenColor:'#fff0dc',sheenRoughness:.9,...properties}):new THREE.MeshStandardMaterial({color,roughness:.84,metalness:0,...properties});
   mat.onBeforeCompile=shader=>{
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 printPosition;')
       .replace('#include <begin_vertex>','#include <begin_vertex>\nprintPosition = position;');
@@ -28,7 +28,7 @@ export function printedMaterial(color,options={}) {
 }
 
 export function resinMaterial(color,options={}) {
-  const mat=printedMaterial(color,{roughness:.43,clearcoat:.22,clearcoatRoughness:.42,
+  const mat=printedMaterial(color,{physical:true,roughness:.43,clearcoat:.22,clearcoatRoughness:.42,
     sheen:.22,sheenRoughness:.75,ior:1.46,emissive:color,emissiveIntensity:.28,...options});
   const printedCompile=mat.onBeforeCompile;
   mat.onBeforeCompile=shader=>{

@@ -2,14 +2,38 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderPixelRatio,siteMoved} from '../dist/scenario/render-policy.mjs';
 import {terrainHit} from '../dist/scenario/terrain-hit.mjs';
+import {landIndices,maskedIndices,terrainStride} from '../dist/scenario/mesh-budget.mjs';
 
 test('render budget avoids Retina-size buffers while retaining phone resolution',()=>{
   assert.equal(renderPixelRatio(420,600,3),1.5);
   assert.equal(renderPixelRatio(1000,600,1),1);
   for(const [w,h] of [[1209,554.5],[1920,1080],[2560,1440]]) {
     const ratio=renderPixelRatio(w,h,2);
-    assert.ok(ratio<=1.5);assert.ok(w*h*ratio*ratio<=Math.max(1400001,w*h*.75**2));
+    assert.ok(ratio<=1.5);assert.ok(w*h*ratio*ratio<=Math.max(1000001,w*h*.75**2));
   }
+});
+
+test('terrain detail excludes flat ocean while preserving an island inside a coarse cell',()=>{
+  const elevation={width:5,data:new Float32Array(25).fill(-10)};
+  assert.equal(landIndices(elevation,1).length,0);assert.equal(landIndices(elevation,2).length,0);
+  elevation.data[6]=100;
+  assert.ok(landIndices(elevation,2).includes(6));
+  const fine=landIndices(elevation,1);assert.equal(fine.length,24);
+  for(const index of fine)assert.ok(index>=0&&index<25);
+});
+
+test('empty environmental overlays draw no triangles, with boundary transitions retained',()=>{
+  const mask=new Float32Array(9);assert.equal(maskedIndices(2,mask).length,0);
+  mask[4]=.35;assert.ok(maskedIndices(2,mask).length>0);
+  mask.fill(1);assert.equal(maskedIndices(2,mask).length,24);
+});
+
+test('terrain detail has hysteresis so zoom near the threshold does not churn buffers',()=>{
+  let stride=2;
+  for(const d of [31,29,30,28.5]){stride=terrainStride(d,stride);assert.equal(stride,2);}
+  stride=terrainStride(27,stride);assert.equal(stride,1);
+  for(const d of [28.5,30,31.5]){stride=terrainStride(d,stride);assert.equal(stride,1);}
+  assert.equal(terrainStride(33,stride),2);
 });
 
 test('protection allocations reuse geometry; each continuous site movement refreshes it',()=>{

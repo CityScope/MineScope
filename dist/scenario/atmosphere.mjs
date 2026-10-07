@@ -6,7 +6,7 @@ import {FXAAShader} from 'three/addons/shaders/FXAAShader.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {RectAreaLightUniformsLib} from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {SoftBloomPass} from './bloom.mjs';
+import {SoftBloomPass} from './bloom.mjs?v=20261007-ws-status1';
 
 function addBackdrop(scene) {
   const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(2,2),new THREE.ShaderMaterial({
@@ -37,7 +37,7 @@ export function createAtmosphere(renderer,scene,camera) {
 
   addBackdrop(scene);
   const key=new THREE.DirectionalLight('#e2e9ff',.62);key.position.set(-12,13,5);key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-17,right:17,top:17,bottom:-17,far:50});
+  key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-17,right:17,top:17,bottom:-17,far:50});
   key.shadow.normalBias=.012;key.shadow.bias=-.00008;key.shadow.radius=2.5;scene.add(key);
   scene.add(new THREE.HemisphereLight('#9aaed9','#172235',.16));
   const rim=new THREE.DirectionalLight('#7499d5',.22);rim.position.set(9,6,-10);scene.add(rim);

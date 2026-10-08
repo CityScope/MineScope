@@ -3,11 +3,12 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="referrer" content="no-referrer">
   <title>MineScope — Scenario table</title><meta name="description" content="Move a tailings piece on a printed terrain model and explore real-time trade-offs.">
+  <script src="table-config.js?v=20261007-service1"></script>
   <script src="../unity-config.js?v=20260920-url1"></script>
   <link rel="stylesheet" href="style.css?v=20261007-ws-status1">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
   <script src="../unity.js?v=20260920-url1" defer></script>
-  <script type="module" src="table.mjs?v=20261007-ws-status1"></script>
+  <script type="module" src="table.mjs?v=20261007-service1"></script>
 </head>
 <body>
   <svg class="icon-library" aria-hidden="true"><defs>
@@ -27,7 +28,7 @@
     <a class="brand" href="../"><svg><use href="#i-mountain"/></svg>MineScope<span>.</span></a>
     <div class="partners"><span>CityScope</span><img src="../assets/city-science.svg" alt="MIT City Science"><img src="../assets/mit-media-lab.svg" alt="MIT Media Lab"></div>
     <span class="location">Dominga · La Higuera, Chile</span>
-    <span id="table-link-status" class="table-link-status" role="status" aria-live="polite" aria-atomic="true" data-status="unconfigured" title="The physical table link is waiting for a server endpoint.">WebSocket · Not configured</span>
+    <span id="table-link-status" class="table-link-status" role="status" aria-live="polite" aria-atomic="true" data-status="key-required" title="The physical table server needs a session API key.">WebSocket · Key needed</span>
     <div class="unity-status" id="unity-status" role="status" hidden><i></i><span>API key missing</span></div>
     <a class="button map-link" href="../">Project map ↗</a>
     <button class="button" id="reset" aria-label="Reset scenario"><svg><use href="#i-rotate"/></svg><span>Reset</span></button>

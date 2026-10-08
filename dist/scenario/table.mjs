@@ -12,6 +12,7 @@ import {clipSegment} from './geography-core.mjs?v=20261007-ws-status1';
 import {loadGeography} from './geography.mjs?v=20261007-ws-status1';
 import {extentId,dimensions,verticalExaggeration,localToNormalized,normalizedToLocal,localToGeo} from './extent.mjs?v=20261007-ws-status1';
 import {TableLink} from './table-link.mjs?v=20261007-ws-status1';
+import {DeviceLink} from './device-link.mjs?v=20261007-service1';
 import {landIndices,terrainStride} from './mesh-budget.mjs?v=20261007-ws-status1';
 import {createContactLight} from './contact-light.mjs?v=20261007-ws-status1';
 import { CameraSway, frontLimit } from './camera-sway.mjs?v=20261007-ws-status1';
@@ -20,6 +21,10 @@ import { bounds, plant, initialLocation, referenceLocation, settlements, interve
 
 const $=s=>document.querySelector(s),canvas=$('#terrain-canvas'),stage=$('#model-stage');
 $('#unity-status').hidden=!window.MineScopeUnityConfig?.key;
+const linkConfig=window.MineScopeScenarioConfig||{};
+if(linkConfig.endpoint&&(linkConfig.apiKey||linkConfig.transport==='table-v1')){
+  $('#table-link-status').textContent='WebSocket · Preparing…';$('#table-link-status').dataset.status='connecting';$('#table-link-status').title='Waiting for the geographic table to finish loading.';
+}
 const geography=await loadGeography(message=>{$('#loading').lastChild.textContent=message;}).catch(error=>{
   console.error('Elevation source unavailable:',error);$('#loading').innerHTML='<div class="error-message"><strong>Elevation could not be loaded</strong><p>The terrain needs a connection to its elevation source.</p><button class="button" onclick="location.reload()">Try again</button></div>';throw error;
 });
@@ -426,22 +431,25 @@ window.MineScopeTable={read:()=>structuredClone({location:state.location,protect
 
 function synchronizedState(){return {position:{...localToNormalized(state.location),...localToGeo(state.location)},protections:[...state.protections],phase:drag||remoteLift?'lifted':'placed',indicators:{...result.current},fund:{total:result.funding.total,site:result.funding.site,protection:result.funding.protection,remaining:result.funding.remaining},viable:result.suitability.viable,geographyComplete:result.geographyComplete};}
 function startTableLink() {
-  const config=window.MineScopeScenarioConfig||{},params=new URL(location.href),endpoint=params.searchParams.get('tableSocket')||config.endpoint||'';
-  if(params.searchParams.has('tableSocket')){params.searchParams.delete('tableSocket');history.replaceState(null,'',params);}
+  const config=window.MineScopeScenarioConfig||{};
   try {
-    tableLink=new TableLink({endpoint,tableId:config.tableId||'la-higuera',protocols:config.protocols||[],getState:synchronizedState,
+    const connect=options=>{
+    tableLink?.stop();const Link=options.transport==='table-v1'?TableLink:DeviceLink;
+    tableLink=new Link({endpoint:options.endpoint,apiKey:options.apiKey,tableId:options.tableId||'la-higuera',protocols:options.protocols||[],getState:synchronizedState,
       applyState(incoming){receiving=true;try{if(incoming.position||incoming.phase)finishDrag(false);if(incoming.position)state.location=normalizedToLocal(incoming.position);if(incoming.protections)state.protections=incoming.protections;if(incoming.phase!==undefined)remoteLift=incoming.phase==='lifted';recalculate({publish:false});canvas.dataset.remoteUpdates=Number(canvas.dataset.remoteUpdates||0)+1;}finally{receiving=false;}},
       onStatus(status){
         canvas.dataset.tableConnection=status;const node=$('#table-link-status');
-        const labels={unconfigured:'Not configured',connected:'Connected',connecting:'Connecting…',reconnecting:'Reconnecting…'};
-        const details={unconfigured:'The physical table link is waiting for a server endpoint.',connected:'The WebSocket connection to the physical table server is open.',connecting:'Opening the physical table connection.',reconnecting:'The physical table connection was interrupted. Retrying automatically.'};
+        const labels={unconfigured:'Not configured','key-required':'Key needed',connected:'Connected',connecting:'Connecting…',reconnecting:'Reconnecting…'};
+        const details={unconfigured:'The physical table link is waiting for a server endpoint.','key-required':'The physical table server needs a session API key.',connected:'The WebSocket connection to the physical table server is ready.',connecting:'Opening the physical table connection.',reconnecting:'The physical table connection was interrupted. Retrying automatically.'};
         node.textContent=`WebSocket · ${labels[status]||'Unavailable'}`;node.title=details[status]||'The physical table link is unavailable.';node.dataset.status=status;
       }
     });
-    window.MineScopeTable.connect=(endpoint,protocols=[])=>tableLink.setEndpoint(endpoint,protocols);
+    };
+    window.MineScopeTable.connect=(endpoint,options={})=>connect(Array.isArray(options)?{endpoint,transport:'table-v1',protocols:options}:{...config,...options,endpoint});
     window.MineScopeTable.disconnect=()=>{tableLink.setEndpoint('');};
     window.MineScopeTable.frame={extentId,dimensions,axes:{u:'west to east',v:'north to south'}};
-  }catch(error){console.error('Physical table configuration:',error);$('#table-link-status').textContent='WebSocket · Unavailable';$('#table-link-status').dataset.status='error';$('#table-link-status').title='Check the configured WebSocket endpoint.';}
+    connect(config);
+  }catch{$('#table-link-status').textContent='WebSocket · Unavailable';$('#table-link-status').dataset.status='error';$('#table-link-status').title='Check the configured WebSocket endpoint.';}
 }
 window.addEventListener('pagehide',()=>tableLink?.stop());
 window.addEventListener('pageshow',event=>{if(event.persisted&&tableLink?.endpoint){tableLink.stopped=false;tableLink.connect();}});

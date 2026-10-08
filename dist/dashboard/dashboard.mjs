@@ -52,12 +52,14 @@ if(['localhost','127.0.0.1','::1'].includes(location.hostname)){
   let path='';for(let y=0;y<qr.size;y++)for(let x=0;x<qr.size;x++)if(qr.getModule(x,y))path+=`M${x+border},${y+border}h1v1h-1z`;
   $('#qr').innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="${path}"/></svg>`;
   $('#qr').setAttribute('aria-label',config.apiKey?'Scan to join this interactive table session':'Scan to open the interactive table');
+  document.querySelector('.join-panel > span').textContent=config.apiKey?'Scan to interact':'Open table';
 }
 
 let modelReady=false,connectionStatus='key-required';
 function showStatus(status){
   connectionStatus=status;
-  const labels={unconfigured:'Not connected','key-required':'Preview',connecting:'Connecting…',reconnecting:'Reconnecting…',connected:'Connected',error:'Connection unavailable'};
+  const labels={unconfigured:'Not connected','key-required':'Session key needed',connecting:'Connecting…',reconnecting:'Reconnecting…',connected:'Connected',error:'Connection unavailable'};
+  $('#connection').title=status==='key-required'?'Open the prepared session link from the access guide. A plain URL cannot join the physical table.':'';
   $('#connection').dataset.status=status;$('#connection span').textContent=status==='connected'&&!modelReady?'Preparing…':labels[status]||'Connection unavailable';
   document.body.dataset.connection=status;
   if(status!=='connected'&&document.body.dataset.mode==='live')$('#site-status small').textContent='Last received state';

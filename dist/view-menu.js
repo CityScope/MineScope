@@ -6,7 +6,7 @@
   const summary=document.createElement('summary');summary.textContent=names[active]+' ⌄';summary.setAttribute('aria-label','Switch MineScope view');menu.append(summary);
   const nav=document.createElement('nav');nav.setAttribute('aria-label','MineScope views');
   for(const [view,name]of Object.entries(names)){
-    const link=document.createElement('a');link.href=session.urlFor(view).split('#')[0];link.dataset.appView=view;link.textContent=name;
+    const link=document.createElement('a');link.href=session.urlFor(view);link.referrerPolicy='no-referrer';link.rel='noopener noreferrer';link.dataset.appView=view;link.textContent=name;
     if(view===active)link.setAttribute('aria-current','page');nav.append(link);
   }
   menu.append(nav);

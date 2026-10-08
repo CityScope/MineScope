@@ -11,6 +11,10 @@
   root.MineScopeScenarioConfig=parsed.session.table;
   root.MineScopeUnityConfig=Object.freeze({key:parsed.session.unityKey});
   if(parsed.cleanUrl!==root.location.href)root.history.replaceState(root.history.state,'',parsed.cleanUrl);
+  root.addEventListener?.('hashchange',()=>{
+    const fragment=new URLSearchParams(root.location.hash.slice(1));
+    if(['tableKey','unityKey','tableSocket','tableTransport'].some(name=>fragment.has(name)))root.location.reload();
+  });
 })(typeof window==='object'?window:null,function(){
   const defaultEndpoint='wss://linode.mistermatti.com/minescope/ws';
   const paths=Object.freeze({community:'./',table:'scenario/',dashboard:'dashboard/'});

@@ -30,12 +30,33 @@ test('phone invitations omit Unity access and retain the table transport configu
   const keys=new URLSearchParams(invited.hash.slice(1));
   assert.equal(keys.has('unityKey'),false);assert.equal(keys.get('tableKey'),'table-example');assert.equal(keys.get('tableSocket'),'wss://relay.example/ws');
 });
+test('native view links retain session access for middle-click and open-in-new-tab',()=>{
+  const {session}=readSession('https://example.org/MineScope/#unityKey=unity-example&tableKey=table-example');
+  const created=[];
+  const element=tag=>({tag,children:[],dataset:{},append(...nodes){this.children.push(...nodes);},setAttribute(name,value){this[name]=value;},contains(){return false;}});
+  const context=vm.createContext({window:{MineScopeSession:{urlFor:(view,options)=>viewUrl('https://example.org/MineScope/',view,session,options)}},document:{body:{dataset:{appView:'table'}},createElement(tag){const node=element(tag);created.push(node);return node;},querySelector(){return {replaceWith(){}};},addEventListener(){}},URL});
+  vm.runInContext(readFileSync(new URL('../dist/view-menu.js',import.meta.url),'utf8'),context);
+  const links=created.filter(node=>node.tag==='a');assert.equal(links.length,3);
+  for(const link of links){
+    const url=new URL(link.href),fragment=new URLSearchParams(url.hash.slice(1));
+    assert.equal(fragment.get('tableKey'),'table-example');assert.equal(fragment.get('unityKey'),'unity-example');assert.equal(url.search,'');
+    assert.equal(link.referrerPolicy,'no-referrer');assert.equal(link.rel,'noopener noreferrer');
+  }
+});
 test('the blocking session script and existing config scripts preserve access without storage',()=>{
   const root={location:{href:'https://example.org/MineScope/#unityKey=unity-example&tableKey=table-example'},history:{state:null,replaceState(_state,_title,url){root.location.href=url;}}};
   const context=vm.createContext({window:root,document:{currentScript:{src:'https://example.org/MineScope/session.js'}},URL,URLSearchParams});
   for(const file of ['session.js','unity-config.js','scenario/table-config.js'])vm.runInContext(readFileSync(new URL('../dist/'+file,import.meta.url),'utf8'),context);
   assert.equal(root.location.href,'https://example.org/MineScope/');assert.equal(root.MineScopeUnityConfig.key,'unity-example');assert.equal(root.MineScopeScenarioConfig.apiKey,'table-example');
   assert.ok(root.MineScopeSession.urlFor('dashboard').includes('#unityKey=unity-example&tableKey=table-example'));
+});
+test('pasting a session fragment into an already open view activates it',()=>{
+  const listeners={};let reloads=0;
+  const root={location:{href:'https://example.org/MineScope/dashboard/',hash:'',reload(){reloads++;}},addEventListener(name,fn){listeners[name]=fn;},history:{}};
+  const context=vm.createContext({window:root,document:{currentScript:{src:'https://example.org/MineScope/session.js'}},URL,URLSearchParams});
+  vm.runInContext(readFileSync(new URL('../dist/session.js',import.meta.url),'utf8'),context);
+  root.location.hash='#map';listeners.hashchange();assert.equal(reloads,0);
+  root.location.hash='#tableKey=table-example';listeners.hashchange();assert.equal(reloads,1);
 });
 test('the embedded TV table inherits only table access in memory without an authenticated iframe URL',()=>{
   const table={transport:'minescope',endpoint:defaultEndpoint,apiKey:'table-example'};

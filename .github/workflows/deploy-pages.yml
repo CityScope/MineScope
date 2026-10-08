@@ -29,7 +29,7 @@ jobs:
           node-version: '24'
       - name: Check JavaScript
         run: |
-          for file in dist/*.js dist/scenario/*.js dist/scenario/*.mjs tools/*.mjs; do
+          for file in dist/*.js dist/scenario/*.js dist/scenario/*.mjs dist/dashboard/*.mjs tools/*.mjs; do
             node --check "$file"
           done
       - name: Check zoom and collection data

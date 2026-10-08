@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="referrer" content="no-referrer">
+  <title>MineScope — Live dashboard</title><meta name="description" content="Live indicators and terrain for the MineScope community table.">
+  <script src="../session.js?v=20261008-views1"></script>
+  <link rel="stylesheet" href="../view-menu.css?v=20261008-views3"><link rel="stylesheet" href="style.css?v=20261008-views3">
+  <script src="../view-menu.js?v=20261008-views3" defer></script><script src="../vendor/qrcodegen.js" defer></script>
+  <script type="module" src="dashboard.mjs?v=20261008-views3"></script>
+</head>
+<body data-app-view="dashboard">
+  <main class="tv-screen">
+    <header class="topbar"><div class="identity"><span class="brand">MineScope<span>.</span></span><span class="location">Dominga · La Higuera</span></div><div class="display-controls"><span data-view-menu></span><button id="fullscreen" type="button" aria-label="Enter full screen" title="Full screen">⛶</button></div><div class="join-panel"><div class="qr-frame" id="qr" role="img" aria-label="Interactive table QR code"></div><span>Scan to interact</span></div></header>
+    <div class="heading"><h1>Live scenario</h1><div class="connection" id="connection" data-status="preview"><i></i><span>Design preview</span></div></div>
+    <section class="kpi-grid" aria-label="Scenario indicators"><div id="impact-cards"></div>
+      <section class="fund-panel" aria-labelledby="fund-title"><div class="section-heading"><h2 id="fund-title">Company fund</h2><span id="fund-total">US$20M</span></div><div class="balance"><strong id="remaining">$5.3M</strong><span>available</span></div><div class="fund-bar" id="fund-bar" role="img" aria-label="Example fund allocation"></div><div class="fund-key"><span><i class="site-dot"></i>Site <b id="site-cost">$8.8M</b></span><span><i class="protection-dot"></i>Protection <b id="protection-cost">$6.0M</b></span></div></section>
+      <section class="pipeline-card" aria-label="Pipeline distance"><h2>Pipeline</h2><div class="pipeline-value"><strong id="pipeline-km">—</strong><span>km</span></div><svg viewBox="0 0 120 24" aria-hidden="true"><circle cx="4" cy="12" r="3"/><path d="M9 12h25q10 0 16-6t16 0t16 6h29"/><circle cx="116" cy="12" r="3"/></svg><small>Plant → Tailings</small></section>
+    </section>
+    <div class="site-status" id="site-status"><i></i><span>Example candidate site</span><small>Illustrative scores / 100 · lower is better</small></div>
+    <section class="allocation-row"><div class="protections-section"><div class="section-heading"><h2>Protections</h2><span id="funded-count">2 of 5 funded</span></div><div class="protection-list" id="protection-list"></div></div></section>
+    <section class="model-panel" aria-label="Live 3D table"><iframe id="table-display" title="Live 3D terrain model" data-table-display="true" src="../scenario/?display=tv" tabindex="-1" inert></iframe></section>
+    <footer><span id="join-note">Illustrative model · USGS / NOAA · SIMBIO · © OpenStreetMap contributors</span><div class="partners"><img src="../assets/city-science.svg" alt="MIT City Science"><img src="../assets/mit-media-lab.svg" alt="MIT Media Lab"></div></footer>
+  </main><noscript>This dashboard needs JavaScript for live updates.</noscript>
+</body></html>

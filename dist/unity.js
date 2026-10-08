@@ -7,7 +7,7 @@
   let requestVersion=0;
   function showStatus(result){
     const states={
-      'no-key':['idle','API key missing','Not connected. Open MineScope with ?unityKey=YOUR_KEY to connect to Unity.'],
+      'no-key':['idle','Unity · Key needed','Open MineScope with a session link to connect to Unity.'],
       ready:['ready','API ready','Server reachable and send key accepted. Unity is checked when you select a location.'],
       sent:['ready','Unity connected','The server delivered the location message to Unity.'],
       offline:['idle','Unity offline','Server reachable and send key accepted. No Unity app was listening.'],

@@ -3,7 +3,7 @@
   const api=factory();
   if(typeof module==='object'&&module.exports){module.exports=api;return;}
   const config=api.readConfig(root.location.href);
-  root.MineScopeUnityConfig=Object.freeze({key:config.key});
+  root.MineScopeUnityConfig=Object.freeze({key:root.MineScopeSession?.unityKey??config.key});
   if(config.cleanUrl!==root.location.href)root.history.replaceState(root.history.state,'',config.cleanUrl);
 })(typeof window==='object'?window:null,function(){
   function readConfig(href){

@@ -217,3 +217,13 @@ dialog li { padding:4px 0; }
   .topbar .table-link-status{position:static;order:5;flex-basis:100%;justify-content:flex-end;font-size:9px}
   .topbar .unity-status{position:static;order:6;font-size:9px}
 }
+
+html[data-table-display=true] .topbar,
+html[data-table-display=true] .intervention-panel,
+html[data-table-display=true] .stage-bottom,
+html[data-table-display=true] #physical-display {display:none!important}
+html[data-table-display=true] main {height:100dvh;min-height:0;max-width:none;padding:0;margin:0}
+html[data-table-display=true] .model-stage {height:100%;min-height:0;flex:1}
+html[data-table-display=true] .model-label {font-size:10px}
+html[data-table-display=true],html[data-table-display=true] body,html[data-table-display=true] main,html[data-table-display=true] .model-stage {background:transparent!important}
+html[data-table-display=true] .loading {background:transparent!important}

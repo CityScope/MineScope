@@ -4,7 +4,7 @@ import { createEffects } from './effects.mjs?v=20261007-ws-status1';
 import { createDisplay } from './display.mjs?v=20261007-ws-status1';
 import { printedMaterial, resinMaterial } from './printed-material.mjs?v=20261007-ws-status1';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createAtmosphere } from './atmosphere.mjs?v=20261007-ws-status1';
+import { createAtmosphere } from './atmosphere.mjs?v=20261008-views1';
 import {createFrameProfile} from './performance.mjs?v=20261007-ws-status1';
 import {renderPixelRatio,siteMoved} from './render-policy.mjs?v=20261007-ws-status1';
 import {terrainHit} from './terrain-hit.mjs?v=20261007-ws-status1';
@@ -16,10 +16,12 @@ import {DeviceLink} from './device-link.mjs?v=20261007-service1';
 import {landIndices,terrainStride} from './mesh-budget.mjs?v=20261007-ws-status1';
 import {createContactLight} from './contact-light.mjs?v=20261007-ws-status1';
 import { CameraSway, frontLimit } from './camera-sway.mjs?v=20261007-ws-status1';
-import { createViewportResizer } from './viewport.mjs?v=20261007-ws-status1';
+import { createViewportResizer } from './viewport.mjs?v=20261008-views1';
+import {fitIsometricCamera,DisplayCameraRig} from './display-camera.mjs?v=20261008-views1';
 import { bounds, plant, initialLocation, referenceLocation, settlements, interventions, clamp, isWater, surfaceHeight, habitat, livelihood, evaluate, metricInfo, siteFootprint, configureGeography } from './model.mjs?v=20261007-ws-status1';
 
 const $=s=>document.querySelector(s),canvas=$('#terrain-canvas'),stage=$('#model-stage');
+const displayOnly=window.MineScopeSession?.displayOnly===true;
 $('#unity-status').hidden=!window.MineScopeUnityConfig?.key;
 const linkConfig=window.MineScopeScenarioConfig||{};
 if(linkConfig.endpoint&&(linkConfig.apiKey||linkConfig.transport==='table-v1')){
@@ -39,6 +41,7 @@ let result=evaluate(state.location,state.protections),renderer,scene,camera,cont
 const pieces=new Map(),labels=[],groups={},vec=new THREE.Vector3(),raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(),groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 let pipelineMesh,footprint,footprintBorder,selectionRing,ghost,terrainColors,terrainPositions,terrainOcclusion,terrainMaterial,resizeObserver,effects,display,atmosphere,profile,geometryLocation,sceneReady=false,motionUntil=0;
 let terrainColorVariants,terrainColorKey=-1,terrainIndices,terrainStep=2,communityShadowVisible;
+let displayCameraRig;
 const printedSurface=(x,z)=>surfaceHeight(x,z)+.04;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sway=new CameraSway(),upAxis=new THREE.Vector3(0,1,0);
@@ -92,7 +95,7 @@ function updateUI() {
   status.title=suitability.viable?'No demo exclusion detected. Click for placement checks.':suitability.reasons.map(r=>r.detail).join(' ')+' Click for placement checks.';
   canvas.dataset.viable=String(suitability.viable);canvas.dataset.exclusions=suitability.reasons.map(r=>r.id).join(',');
 }
-function recalculate({publish=true,immediate=!drag}={}) {result=evaluate(state.location,state.protections);updateUI();modelDirty=true;const geo=localToGeo(state.location);canvas.dataset.latitude=geo.lat.toFixed(7);canvas.dataset.longitude=geo.lon.toFixed(7);if(publish&&!receiving)tableLink?.publish({immediate});canvas.dataset.x=state.location.x;canvas.dataset.z=state.location.z;canvas.dataset.phase=drag||remoteLift?'dragging':'placed';if(drag)canvas.dataset.liveUpdates=Number(canvas.dataset.liveUpdates||0)+1;invalidate();if($('#detail-dialog').open&&$('#detail-dialog').dataset.metric)renderMetric($('#detail-dialog').dataset.metric);}
+function recalculate({publish=true,immediate=!drag}={}) {result=evaluate(state.location,state.protections);updateUI();modelDirty=true;const geo=localToGeo(state.location);canvas.dataset.latitude=geo.lat.toFixed(7);canvas.dataset.longitude=geo.lon.toFixed(7);if(publish&&!receiving&&!displayOnly)tableLink?.publish({immediate});canvas.dataset.x=state.location.x;canvas.dataset.z=state.location.z;canvas.dataset.phase=drag||remoteLift?'dragging':'placed';if(drag)canvas.dataset.liveUpdates=Number(canvas.dataset.liveUpdates||0)+1;invalidate();if($('#detail-dialog').open&&$('#detail-dialog').dataset.metric)renderMetric($('#detail-dialog').dataset.metric);if(displayOnly&&sceneReady&&(!linkConfig.apiKey||tableLink?.confirmed))window.parent.postMessage({type:'minescope.display.result',result:{current:result.current,base:result.base,funding:result.funding,suitability:result.suitability,pipelineKm:result.pipeline.km}},location.origin);}
 window.toast=message=>{clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').hidden=false;toastTimer=setTimeout(()=>$('#toast').hidden=true,2600);};
 function dialog(html,metric='') {$('#detail-content').innerHTML=html;$('#detail-dialog').dataset.metric=metric;if(!$('#detail-dialog').open)$('#detail-dialog').showModal();}
 $('#detail-dialog .close-dialog').onclick=()=>$('#detail-dialog').close();
@@ -159,6 +162,7 @@ function createTailings() {
   pieces.set(id,{id,group,pick,label,lift:0,light,contact,materials:[mat,rim,dark],colors:[mat,rim,dark].map(m=>m.color.clone())});
 }
 function toggleToken(id) {
+  if(displayOnly)return;
   profile?.input();
   if(state.protections.includes(id))state.protections=state.protections.filter(p=>p!==id);
   else state.protections.push(id);
@@ -166,6 +170,7 @@ function toggleToken(id) {
 }
 function supportHeight(p,id) {const radius=id==='tailings'?.58:.22;return Math.max(surfaceHeight(p.x,p.z),surfaceHeight(p.x-radius,p.z-radius),surfaceHeight(p.x+radius,p.z+radius),surfaceHeight(p.x-radius,p.z+radius),surfaceHeight(p.x+radius,p.z-radius))+.055;}
 function setLocation(id,p) {
+  if(displayOnly)return;
   const next={x:clamp(p.x,-bounds.width/2,bounds.width/2),z:clamp(p.z,-bounds.depth/2,bounds.depth/2)};remoteLift=false;
   if(id!=='tailings')return;state.location=next;recalculate();
 }
@@ -175,12 +180,14 @@ function moveByKey(id,event) {
 }
 
 async function initTerrain() {
-  renderer=new THREE.WebGLRenderer({canvas,antialias:false,alpha:true});renderer.setPixelRatio(renderPixelRatio(stage.clientWidth,stage.clientHeight,devicePixelRatio));renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;
+  renderer=new THREE.WebGLRenderer({canvas,antialias:displayOnly,alpha:true});renderer.setPixelRatio(renderPixelRatio(stage.clientWidth,stage.clientHeight,devicePixelRatio));renderer.shadowMap.enabled=true;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.94;
   if(new URLSearchParams(location.search).has('profile'))profile=createFrameProfile(canvas,renderer);
-  scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(35,1,.1,120);
+  scene=new THREE.Scene();camera=displayOnly?new THREE.OrthographicCamera(-15,15,15,-15,.1,160):new THREE.PerspectiveCamera(35,1,.1,120);
   controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.dampingFactor=.12;controls.enablePan=false;controls.minPolarAngle=.22;controls.maxPolarAngle=1.32;controls.minAzimuthAngle=-frontLimit;controls.maxAzimuthAngle=frontLimit;controls.minDistance=16;controls.maxDistance=85;controls.rotateSpeed=.6;controls.zoomSpeed=.65;controls.addEventListener('change',()=>{motionUntil=performance.now()+200;invalidate();});controls.addEventListener('start',stopSway);
-  atmosphere=createAtmosphere(renderer,scene,camera);
-  display=createDisplay(scene,$('#physical-display'),stage,bounds.depth);resizeViewport=createViewportResizer(camera,renderer,display);
+  controls.enabled=!displayOnly;
+  if(displayOnly){controls.minAzimuthAngle=-Infinity;controls.maxAzimuthAngle=Infinity;}
+  atmosphere=createAtmosphere(renderer,scene,camera,{transparent:displayOnly});
+  display=displayOnly?{resize(){},update(){},framingPoints:[],projectedBounds:null}:createDisplay(scene,$('#physical-display'),stage,bounds.depth);resizeViewport=createViewportResizer(camera,renderer,display);
   box(bounds.width+.65,.32,bounds.depth+.65,material('#192c3b',{roughness:.5,metalness:.2}),scene,[0,-.14,0]);box(bounds.width+.35,.06,bounds.depth+.35,printedMaterial('#e8e4dc'),scene,[0,.04,0]);
   const geometry=new THREE.PlaneGeometry(bounds.width,bounds.depth,512,512);geometry.rotateX(-Math.PI/2);terrainPositions=geometry.attributes.position;
   terrainColors=new Float32Array(terrainPositions.count*3);terrainOcclusion=new Float32Array(terrainPositions.count);
@@ -281,12 +288,13 @@ function updateModel() {
   const alertColors=['#e3756e','#f5a09b','#803b3b'];
   piece.materials.forEach((m,i)=>{if(invalid)m.color.set(alertColors[i]);else m.color.copy(piece.colors[i]);if(i<2)m.emissive.copy(m.color);});
   piece.light.color.set(invalid?'#ee7b72':'#ffd486');
-  const siteLabel=invalid?`↕ Not viable\n${result.suitability.reasons.map(r=>r.label).join(' · ')}`:'↕ Tailings';
+  const siteLabel=invalid?`${displayOnly?'':'↕ '}Not viable\n${result.suitability.reasons.map(r=>r.label).join(' · ')}`:displayOnly?'Tailings':'↕ Tailings';
   if(piece.label.el.textContent!==siteLabel)piece.label.el.textContent=siteLabel;piece.label.el.classList.toggle('invalid',invalid);
   piece.label.el.title=invalid?result.suitability.reasons.map(r=>r.detail).join(' ')+' Move to another location.':'Lift and move the tailings site';
   footprint.material.color.set(invalid?'#ef6f67':'#edb64f');footprint.material.opacity=invalid?.35:.23;
   footprintBorder.material.color.set(invalid?'#f58c85':'#edbd64');selectionRing.material.color.set(invalid?'#f58c85':'#f1d28c');
   if(siteMoved(geometryLocation,state.location)) {
+    displayCameraRig?.track(new THREE.Vector3(state.location.x,supportHeight(state.location,'tailings')+.4,state.location.z));
     const points=[];
     for(let i=0;i<result.pipeline.points.length-1;i++) {
       const a=result.pipeline.points[i],b=result.pipeline.points[i+1];for(let k=0;k<3;k++){const t=k/3,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t;points.push(new THREE.Vector3(x,surfaceHeight(x,z)+.105,z));}
@@ -312,6 +320,7 @@ function resetCamera() {
   for(let row=0;row<=16;row++)for(let col=0;col<=16;col++) {
     const x=bounds.width*(col/16-.5),z=bounds.depth*(row/16-.5);points.push([x,surfaceHeight(x,z)+.5,z]);
   }
+  if(displayOnly){fitIsometricCamera(camera,controls.target,points,aspect);displayCameraRig=new DisplayCameraRig(camera,controls.target);controls.update();invalidate();return;}
   for(const point of points) {
     const p=new THREE.Vector3(...point).sub(controls.target),depth=p.dot(direction);
     distance=Math.max(distance,depth+Math.abs(p.dot(right))/(tan*aspect)*1.07,depth+Math.abs(p.dot(up))/tan*1.07);
@@ -326,11 +335,12 @@ function invalidate() {dirty=true;if(!frame)frame=requestAnimationFrame(render);
 function render(time) {
   frame=0;if(!sceneReady||document.hidden)return;
   const liftMoving=Math.abs(((drag?.id==='tailings'||remoteLift)?.88:0)-(pieces.get('tailings')?.lift||0))>.002;
-  if(!dirty&&!drag&&!sway.active&&!liftMoving&&time>motionUntil&&time-lastFrame<32){frame=requestAnimationFrame(render);return;}
+  if(!dirty&&!drag&&!sway.active&&!displayCameraRig?.moving&&!liftMoving&&time>motionUntil&&time-lastFrame<32){frame=requestAnimationFrame(render);return;}
   const profileStart=profile?.start()||0;
   movePendingDrag();
   const dt=Math.min((time-lastFrame)/16.7,3)||1;lastFrame=time;
   if(modelDirty)updateModel();
+  if(displayCameraRig?.tick(dt*.0167))dirty=true;
   if(sway.active){const angle=sway.advance(dt*.0167),offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(upAxis,angle-controls.getAzimuthalAngle());camera.position.copy(controls.target).add(offset);}
   controls.update();
   let animating=false;
@@ -351,7 +361,7 @@ function render(time) {
     const labelPriority=label=>label.el.dataset.piece?2:label.protection?1:0;
     const orderedLabels=[...labels].sort((a,b)=>labelPriority(b)-labelPriority(a));
     for(const label of orderedLabels) {
-      label.eligible=!label.community||state.layers.communities;
+      label.eligible=!label.community||(state.layers.communities&&(!displayOnly||['La Higuera','Los Choros','El Trapiche'].includes(label.el.textContent)));
       if(label.protection) {
         const a=result.funding.allocations[label.protection];
         label.eligible=state.layers.protection&&a.requested&&a.fraction!==1;
@@ -373,7 +383,7 @@ function render(time) {
       label.el.style.left=`${x}px`;label.el.style.top=`${top}px`;label.el.style.setProperty('--leader',`${y-top+10}px`);
     }
   }
-  dirty=false;if((animating||drag||sway.active||!reducedMotion)&&!frame)frame=requestAnimationFrame(render);
+  dirty=false;if((animating||drag||sway.active||displayCameraRig?.moving||!reducedMotion)&&!frame)frame=requestAnimationFrame(render);
   canvas.dataset.lift=pieces.get('tailings')?.lift.toFixed(3)||'0';
   canvas.dataset.cameraDistance=camera.position.distanceTo(controls.target).toFixed(4);
   canvas.dataset.cameraAzimuth=controls.getAzimuthalAngle().toFixed(4);
@@ -392,7 +402,7 @@ function onHover(event) {
   if(drag)return;const id=pickPiece(event);selectedHover=id||null;canvas.style.cursor=id?'grab':'grab';if(id)invalidate();
 }
 function beginDrag(id,event,target) {
-  if(!renderer||id!=='tailings')return;cancelDrag();remoteLift=false;const p=state.location,ground=groundPoint(event)||p;
+  if(displayOnly||!renderer||id!=='tailings')return;cancelDrag();remoteLift=false;const p=state.location,ground=groundPoint(event)||p;
   drag={id,pointerId:event.pointerId,target,before:{...p},offset:{x:p.x-ground.x,z:p.z-ground.z}};
   state.selected=id;controls.enabled=false;stopSway();stage.classList.add('dragging');target.setPointerCapture(event.pointerId);canvas.dataset.maxLift='0';canvas.dataset.liveUpdates='0';
   ghost.geometry.dispose();ghost.geometry=new THREE.BufferGeometry().setFromPoints(rectanglePoints(p,1.35,1.08));ghost.computeLineDistances();ghost.visible=true;
@@ -442,6 +452,7 @@ function startTableLink() {
         const labels={unconfigured:'Not configured','key-required':'Key needed',connected:'Connected',connecting:'Connecting…',reconnecting:'Reconnecting…'};
         const details={unconfigured:'The physical table link is waiting for a server endpoint.','key-required':'The physical table server needs a session API key.',connected:'The WebSocket connection to the physical table server is ready.',connecting:'Opening the physical table connection.',reconnecting:'The physical table connection was interrupted. Retrying automatically.'};
         node.textContent=`WebSocket · ${labels[status]||'Unavailable'}`;node.title=details[status]||'The physical table link is unavailable.';node.dataset.status=status;
+        if(displayOnly)window.parent.postMessage({type:'minescope.display.status',status},location.origin);
       }
     });
     };

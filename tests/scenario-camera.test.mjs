@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from '../dist/scenario/vendor/three.module.js';
 import {createViewportResizer} from '../dist/scenario/viewport.mjs';
 import {CameraSway,frontLimit} from '../dist/scenario/camera-sway.mjs';
+import {fitIsometricCamera,DisplayCameraRig} from '../dist/scenario/display-camera.mjs';
 
 test('automatic camera sweep reverses while staying in front for repeated cycles',()=>{
   for(const start of [-frontLimit,-.2,0,.2,frontLimit]) {
@@ -15,6 +16,32 @@ test('automatic camera sweep reverses while staying in front for repeated cycles
     assert.ok(min<-.4&&max>.4);
     sway.stop();assert.equal(sway.active,false);
   }
+});
+test('the TV keeps a close crop and turns toward an offscreen site without zooming out',()=>{
+  const points=[];for(const x of [-10,10])for(const y of [0,5])for(const z of [-10,10])points.push([x,y,z]);
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,160),target=new THREE.Vector3();fitIsometricCamera(camera,target,points,1.3);
+  const rig=new DisplayCameraRig(camera,target);assert.equal(camera.zoom,1.45);
+  for(const point of [new THREE.Vector3(10,1,-10),new THREE.Vector3(-10,1,-10),new THREE.Vector3(-10,4,10),new THREE.Vector3(10,6,10)]){
+    rig.track(point);for(let frame=0;frame<240;frame++)rig.tick(1/60);
+    camera.updateMatrixWorld();const projected=point.clone().project(camera);
+    assert.ok(Math.abs(projected.x)<.9);assert.ok(Math.abs(projected.y)<.9);assert.equal(camera.zoom,1.45);
+    assert.equal(rig.moving,false);assert.equal(rig.track(point),false,'A visible stationary site does not keep turning');
+  }
+});
+test('the portrait TV fits the whole table with a fixed parallel isometric projection',()=>{
+  const points=[];for(const x of [-10,10])for(const y of [0,5])for(const z of [-10,10])points.push([x,y,z]);
+  const camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,160),target=new THREE.Vector3();
+  fitIsometricCamera(camera,target,points,1.25);camera.updateMatrixWorld();
+  const direction=camera.position.clone().sub(target).normalize();
+  assert.ok(Math.abs(direction.x-direction.y)<1e-10);assert.ok(Math.abs(direction.x-direction.z)<1e-10);
+  for(const point of points){const p=new THREE.Vector3(...point).project(camera);assert.ok(Math.abs(p.x)<1);assert.ok(Math.abs(p.y)<1);}
+  const right=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);
+  const a=target.clone().add(right),b=a.clone().addScaledVector(direction,10);
+  assert.ok(Math.abs(a.project(camera).x-b.project(camera).x)<1e-10,'Depth does not change apparent size');
+  const position=camera.position.clone(),orientation=camera.quaternion.clone();camera.zoom=1.7;
+  const resize=createViewportResizer(camera,{setSize(){}},{resize(){}});resize(800,600);
+  assert.equal(camera.zoom,1.7);assert.ok(camera.position.equals(position));assert.ok(camera.quaternion.equals(orientation));
+  assert.ok(Math.abs((camera.right-camera.left)/(camera.top-camera.bottom)-800/600)<1e-10);
 });
 
 test('layout and fullscreen resizes preserve a zoomed camera and its orientation',()=>{

@@ -17,7 +17,7 @@ The amber object is an oversized interaction handle. Its projected footprint is 
 
 ## Device service setup
 
-Supply the session key as `#tableKey=YOUR_API_KEY` on the scenario URL. A blocking configuration script consumes this fragment and removes it from the address bar before other assets load. Do not commit or share a URL containing the real key. The key lives only in memory; a full reload needs a fresh runtime key. No local/session storage or cookie stores it.
+Supply the session key as `#tableKey=YOUR_API_KEY` on the scenario URL. A blocking configuration script consumes this fragment and removes it from the address bar before other assets load. Do not commit a URL containing the real key. Share it only with intended table participants. The key lives only in memory; a full reload needs a fresh runtime key. No local/session storage or cookie stores it.
 
 Alternatively supply configuration before `table-config.js` starts:
 
@@ -168,3 +168,11 @@ The relay listens only on `127.0.0.1:4180`, logs accepted changes, and reports i
 Validation: `node --test tests/scenario-*.test.mjs`. The relay test opens real WebSocket connections; it needs permission to bind a localhost port. Other tests use synthetic fixtures and fake sockets, covering round trips, footprint scale, source decoding, exclusions, funding, echo prevention, throttling, invalid messages and reconnect recovery.
 
 The scenario header always shows the WebSocket status: Key needed, Not configured, Connecting, Connected, Reconnecting, or Unavailable. No endpoint or required key means no connection attempts. The legacy Unity notice appears on this page only when a Unity key is explicitly supplied; the project map keeps its existing Unity status.
+
+## Portrait TV and shared navigation
+
+`dashboard/` is a read-only portrait display. Its embedded 3D table connects to the MineScope device service, adopts its snapshot, and passes computed impact and funding to the parent display. The host checks both the message origin and exact iframe source; there is only one geography load, model calculation and connection for the display. Without a key it shows a clearly labelled design example. No defaults or edits are published by the dashboard.
+
+All three views now load `session.js` before other scripts. The standard launch fragment is `#tableKey=TABLE_KEY&unityKey=UNITY_KEY`; either key may be omitted. Existing query links still work, but the view menu always transfers access via fragments. Keys are removed from the address bar and never persisted. The runtime view menu transfers both host keys; the participant QR always opens the interactive table, and includes only the supplied table credential and any custom table connection settings. Generation occurs in the browser, without a third-party QR endpoint.
+
+The current service does not issue expiring participant tokens: this QR grants the same table control as the supplied table key. A future invitation endpoint can replace the embedded table key with a short-lived workshop token without changing the display layout.

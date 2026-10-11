@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import {printedMaterial,resinMaterial} from './printed-material.mjs?v=20261007-ws-status1';
-import {interventions,surfaceHeight,clamp,bounds} from './model.mjs?v=20261007-ws-status1';
+import {interventions,surfaceHeight,clamp,bounds} from './model.mjs?v=20261010-footprint1';
 import {siteMoved} from './render-policy.mjs?v=20261007-ws-status1';
-import {createContactLight} from './contact-light.mjs?v=20261007-ws-status1';
+import {createContactLight} from './contact-light.mjs?v=20261010-footprint1';
 
 export function protectionAnchor(id,location) {
   const index=interventions.findIndex(i=>i.id===id),angle=-2.65+index*Math.PI*2/5;

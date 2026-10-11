@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {surfaceHeight,habitatBoundary,bounds} from './model.mjs?v=20261007-ws-status1';
+import {surfaceHeight,habitatBoundary,bounds} from './model.mjs?v=20261010-footprint1';
 import {maskedIndices} from './mesh-budget.mjs?v=20261007-ws-status1';
 
 export function createHatchedArea(scene,field,color,direction,opacity) {

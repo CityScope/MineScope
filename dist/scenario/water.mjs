@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {bounds,geographyData} from './model.mjs?v=20261007-ws-status1';
+import {bounds,geographyData} from './model.mjs?v=20261010-footprint1';
 
 const waves=`
 float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}

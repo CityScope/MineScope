@@ -26,16 +26,24 @@ export const drainage=(x,z)=>sampleGrid(ready().masks.water,x,z);
 export const habitat=(x,z)=>sampleGrid(ready().masks.protected,x,z);
 export const livelihood=(x,z)=>sampleGrid(ready().masks.land,x,z);
 export const runoffPath=p=>flowPath(p,elevation);
-export function slope(x,z) {
+export function slope(x,z,footprintLocation=null) {
   const step=.04;
-  return Math.hypot(elevation(x+step,z)-elevation(x-step,z),elevation(x,z+step)-elevation(x,z-step))/(2*step*kmPerUnit*1000);
+  const left=footprintLocation?Math.max(x-step,footprintLocation.x-siteFootprint.width/2):x-step;
+  const right=footprintLocation?Math.min(x+step,footprintLocation.x+siteFootprint.width/2):x+step;
+  const rear=footprintLocation?Math.max(z-step,footprintLocation.z-siteFootprint.depth/2):z-step;
+  const front=footprintLocation?Math.min(z+step,footprintLocation.z+siteFootprint.depth/2):z+step;
+  return Math.hypot((elevation(right,z)-elevation(left,z))/(right-left),(elevation(x,front)-elevation(x,rear))/(front-rear))/(kmPerUnit*1000);
+}
+export function siteSupportHeight(location) {
+  const {x,z}=location,w=siteFootprint.width/2,d=siteFootprint.depth/2;
+  return Math.max(surfaceHeight(x,z),surfaceHeight(x-w,z-d),surfaceHeight(x+w,z-d),surfaceHeight(x-w,z+d),surfaceHeight(x+w,z+d))+.055;
 }
 export function siteSuitability(location) {
   let water=false,protectedOverlap=false,urbanOverlap=false,minHeight=Infinity,maxHeight=-Infinity,maxSlope=0;
   for(let j=0;j<=6;j++)for(let i=0;i<=8;i++) {
     const x=location.x+siteFootprint.width*(i/8-.5),z=location.z+siteFootprint.depth*(j/6-.5),h=elevation(x,z);
     water ||= isWater(x,z);protectedOverlap ||= habitat(x,z)>=habitatBoundary;urbanOverlap ||= sampleGrid(ready().masks.urban,x,z)>.38;
-    minHeight=Math.min(minHeight,h);maxHeight=Math.max(maxHeight,h);maxSlope=Math.max(maxSlope,slope(x,z));
+    minHeight=Math.min(minHeight,h);maxHeight=Math.max(maxHeight,h);maxSlope=Math.max(maxSlope,slope(x,z,location));
   }
   const occupied=settlements.filter(s=>Math.abs(s.x-location.x)<siteFootprint.width/2+.25&&Math.abs(s.z-location.z)<siteFootprint.depth/2+.25);
   const relief=maxHeight-minHeight,reasons=[];

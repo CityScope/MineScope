@@ -3,7 +3,7 @@
   const active=document.body.dataset.appView||'community';
   const names={community:'Community map',table:'Interactive table',dashboard:'Live dashboard'};
   const menu=document.createElement('details');menu.className='view-menu';
-  const summary=document.createElement('summary');summary.textContent=names[active]+' ⌄';summary.setAttribute('aria-label','Switch MineScope view');menu.append(summary);
+  const summary=document.createElement('summary');summary.textContent=names[active];summary.setAttribute('aria-label','Switch MineScope view');menu.append(summary);
   const nav=document.createElement('nav');nav.setAttribute('aria-label','MineScope views');
   for(const [view,name]of Object.entries(names)){
     const link=document.createElement('a');link.href=session.urlFor(view);link.referrerPolicy='no-referrer';link.rel='noopener noreferrer';link.dataset.appView=view;link.textContent=name;

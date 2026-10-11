@@ -1,9 +1,11 @@
 import * as THREE from 'three';
-import { surfaceHeight, runoffPath, clamp, habitat, livelihood, interventions, bounds } from './model.mjs?v=20261007-ws-status1';
-import {createOcean} from './water.mjs?v=20261007-ws-status1';
-import {createAttachedProtections,protectionAnchor} from './protections.mjs?v=20261007-ws-status1';
-import {createHatchedArea} from './area-hatching.mjs?v=20261007-ws-status1';
+import { surfaceHeight, runoffPath, clamp, habitat, livelihood, interventions, bounds } from './model.mjs?v=20261010-footprint1';
+import {createOcean} from './water.mjs?v=20261010-footprint1';
+import {createAttachedProtections,protectionAnchor} from './protections.mjs?v=20261010-footprint1';
+import {createHatchedArea} from './area-hatching.mjs?v=20261010-footprint1';
 import {siteMoved} from './render-policy.mjs?v=20261007-ws-status1';
+import {createRestrictionHighlights} from './restriction-highlights.mjs?v=20261010-footprint1';
+import {createDustPlume} from './dust-plume.mjs?v=20261010-wind1';
 
 const vertex=`varying vec2 vUv;
 void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
@@ -33,22 +35,16 @@ function placePatch(mesh,location) {
   }
   positions.needsUpdate=true;mesh.geometry.computeBoundingSphere();
 }
-export function createEffects(scene) {
+export function createEffects(scene,{interactive=true}={}) {
+  const restrictions=interactive?createRestrictionHighlights(scene):null;
   const oceanMaterial=createOcean(scene);
-  const dustMaterial=projectedMaterial(`
-vec2 p=vec2((vUv.x-.5)*10.0,(.5-vUv.y)*10.0);
-vec2 wind=normalize(vec2(.8,.6));float along=dot(p,wind);float across=dot(p,vec2(-wind.y,wind.x));
-float width=.34+max(along,0.0)*.42;
-float plume=exp(-pow(across/width,2.0))*smoothstep(-.3,.6,along)*(1.0-smoothstep(2.8,5.4,along));
-vec2 drift=p-wind*time*.25;
-float particles=.48+.32*fieldNoise(drift*2.8)+.2*fieldNoise(drift*6.0+7.3);
-float alpha=plume*particles*(.32+intensity*.65);`,'#E9BB63');
+  const dustCloud=createDustPlume(scene),dust=dustCloud.mesh;
   const noiseMaterial=projectedMaterial(`
 vec2 p=(vUv-.5)*10.0;float r=length(p);
 float fade=exp(-dot(p,p)/7.0)*(1.0-smoothstep(3.4,4.65,r));
 float dots=1.0-smoothstep(.07,.16,length(fract(p*3.4)-.5));
 float alpha=fade*(.025+dots*.3)*(.35+intensity*.65);`,'#a9bafa');
-  const dust=patch(10,80,dustMaterial,scene),noise=patch(10,80,noiseMaterial,scene);
+  const noise=patch(10,80,noiseMaterial,scene);
   const count=160,geometry=new THREE.BufferGeometry(),positions=new Float32Array(count*6),uv=new Float32Array(count*4),indices=[];
   for(let i=0;i<count;i++){uv[i*4]=0;uv[i*4+1]=i/(count-1);uv[i*4+2]=1;uv[i*4+3]=i/(count-1);if(i<count-1){const a=i*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}}
   geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setAttribute('uv',new THREE.BufferAttribute(uv,2));geometry.setIndex(indices);
@@ -76,6 +72,7 @@ float alpha=(wave*fade*.6+rim)*(.25+.75*funded);`,i.color);
   let protectionVisible=true,previousLocation,previousWater;
   return {
     protectionAnchor,
+    setWind:dustCloud.setDirection,
     createRiverMaterial(){
       const material=new THREE.ShaderMaterial({uniforms:{time:{value:0}},vertexShader:vertex,
         fragmentShader:`varying vec2 vUv;uniform float time;
@@ -83,10 +80,11 @@ void main(){float flow=pow(.5+.5*sin(vUv.x*145.0+time*2.2),4.0);vec3 color=mix(v
 #include <colorspace_fragment>
 }`,toneMapped:false});riverMaterials.push(material);return material;
     },
-    update(result){
+    update(result,{placing=false}={}){
+      restrictions?.update(result,placing);
       const p=result.location,moved=siteMoved(previousLocation,p);
-      if(moved){placePatch(dust,p);placePatch(noise,p);}
-      dustMaterial.uniforms.intensity.value=clamp((result.current.community-12)/70);
+      if(moved)placePatch(noise,p);
+      dustCloud.update(result);
       noiseMaterial.uniforms.intensity.value=clamp((result.current.community-12)/70);
       pollutionMaterial.uniforms.intensity.value=result.current.water/100;
       cylinders.update(result);
@@ -109,6 +107,6 @@ void main(){float flow=pow(.5+.5*sin(vUv.x*145.0+time*2.2),4.0);vec3 color=mix(v
       previousLocation={...p};previousWater=result.current.water;
     },
     setLayers(layers){for(const [id,mesh] of Object.entries(projection))mesh.visible=layers[id]!==false;protectionVisible=layers.protection!==false;cylinders.setVisible(protectionVisible);for(const p of protections)p.mesh.visible=protectionVisible&&p.funded>0;},
-    tick(seconds){for(const mat of [oceanMaterial,dustMaterial,noiseMaterial,pollutionMaterial,...riverMaterials,...protections.map(p=>p.material)])mat.uniforms.time.value=seconds;}
+    tick(seconds){restrictions?.tick();dustCloud.tick(seconds);for(const mat of [oceanMaterial,noiseMaterial,pollutionMaterial,...riverMaterials,...protections.map(p=>p.material)])mat.uniforms.time.value=seconds;}
   };
 }

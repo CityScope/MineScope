@@ -6,12 +6,12 @@
   <script src="../session.js?v=20261008-sync1"></script>
   <script src="table-config.js?v=20261007-service1"></script>
   <script src="../unity-config.js?v=20261008-views1"></script>
-  <link rel="stylesheet" href="../view-menu.css?v=20261008-views3">
-  <script src="../view-menu.js?v=20261008-sync1" defer></script>
-  <link rel="stylesheet" href="style.css?v=20261008-views2">
+  <link rel="stylesheet" href="../view-menu.css?v=20261010-wind1">
+  <script src="../view-menu.js?v=20261010-wind1" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261010-wind1">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js","three/addons/":"./vendor/"}}</script>
   <script src="../unity.js?v=20261008-views1" defer></script>
-  <script type="module" src="table.mjs?v=20261008-views1"></script>
+  <script type="module" src="table.mjs?v=20261010-wind1"></script>
 </head>
 <body data-app-view="table">
   <svg class="icon-library" aria-hidden="true"><defs>
@@ -26,6 +26,7 @@
     <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M4 9a9 9 0 1 1 0 8M4 3v6h6"/></symbol>
     <symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
     <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m3 8 9-5 9 5-9 5ZM3 12l9 5 9-5M3 16l9 5 9-5"/></symbol>
   </defs></svg>
   <header class="topbar">
     <a class="brand" href="../"><svg><use href="#i-mountain"/></svg>MineScope<span>.</span></a>
@@ -45,9 +46,11 @@
       <div class="screen-legend" aria-label="Projected impact legend"><span><i style="--color:#E08063"></i>Pollution</span><span><i style="--color:#E9BB63"></i>Dust</span><span><i style="--color:#a9bafa"></i>Noise</span><span><i class="area-legend" style="--color:#3d977b"></i>Protected areas</span><span><i class="area-legend land-legend" style="--color:#b88e49"></i>Productive land</span><span><i class="protection-legend"></i>Protection</span></div>
     </section>
       <div class="loading" id="loading" role="status"><span class="spinner"></span>Preparing the terrain…</div>
-      <canvas id="terrain-canvas" aria-label="3D terrain. Drag the amber tailings piece, or select a piece and use the arrow keys. Drag empty terrain to look from side to side; scroll to zoom."></canvas>
+      <canvas id="terrain-canvas" aria-label="3D terrain. Drag the tailings handle to move the site. One finger rotates. Pinch to zoom; drag with two fingers to pan. With a mouse, drag to rotate, right-drag to pan, and scroll to zoom. Arrow keys move the selected site."></canvas>
       <div id="model-labels" class="model-labels"></div>
-      <div class="stage-bottom"><div class="stage-readout"><button id="pipeline-detail" class="pipeline-badge">Pipeline <strong id="pipeline-km">— km</strong> ↗</button><button class="pipeline-badge geography-badge" id="geography-detail" aria-label="Study area and data sources">Geography ↗</button></div><div class="view-tools" role="group" aria-label="Model view"><button id="rotate-view" class="button" aria-label="Rotate view left and right" aria-pressed="false"><svg><use href="#i-rotate"/></svg>Rotate</button><button id="zoom-in" class="button" aria-label="Zoom in">＋</button><button id="zoom-out" class="button" aria-label="Zoom out">−</button><button id="layers" class="button" aria-expanded="false">Layers ▱</button></div></div>
+      <button id="placement-status" class="placement-status" aria-live="polite" hidden><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m12 3 10 18H2ZM12 9v5m0 3h.01"/></svg><span></span></button>
+      <div class="stage-bottom"><div class="stage-readout"><button id="pipeline-detail" class="pipeline-badge">Pipeline <strong id="pipeline-km">— km</strong> ↗</button><button class="pipeline-badge geography-badge" id="geography-detail" aria-label="Study area and data sources">Geography ↗</button></div><div class="view-tools" role="group" aria-label="Model view"><button id="rotate-view" class="button" aria-label="Rotate view left and right" title="Rotate view" aria-pressed="false"><svg><use href="#i-rotate"/></svg><span>Rotate</span></button><button id="zoom-in" class="button" aria-label="Zoom in" title="Zoom in">＋</button><button id="zoom-out" class="button" aria-label="Zoom out" title="Zoom out">−</button><button id="layers" class="button" aria-label="Map layers" title="Map layers" aria-expanded="false" aria-controls="layer-menu"><svg><use href="#i-layers"/></svg><span>Layers</span></button><button id="wind-toggle" class="button" aria-label="Wind direction" title="Wind direction" aria-expanded="false" aria-controls="wind-panel"><svg><use href="#i-wind"/></svg><span>Wind</span></button></div></div>
+      <div id="wind-panel" class="wind-panel" hidden><div class="wind-heading"><strong>Wind direction</strong><output id="wind-value" for="wind-direction">125° SE</output></div><div class="wind-setting"><svg class="wind-compass" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/><path class="wind-arrow" d="M24 36V12m-6 6 6-6 6 6"/></svg><input id="wind-direction" type="range" min="0" max="360" step="5" value="125" aria-label="Direction dust travels" title="Direction dust travels; visual preview"></div></div>
       <div id="layer-menu" class="layer-menu" hidden><strong>Projected layers</strong><label><input type="checkbox" data-layer="protection" checked>Protections</label><label><input type="checkbox" data-layer="pollution" checked>Water pollution</label><label><input type="checkbox" data-layer="dust" checked>Dust</label><label><input type="checkbox" data-layer="noise" checked>Noise</label><label><input type="checkbox" data-layer="water" checked>Watercourses</label><label><input type="checkbox" data-layer="catchments" checked>Catchments</label><label><input type="checkbox" data-layer="habitat" checked>Protected areas</label><label><input type="checkbox" data-layer="communities" checked>Communities</label><label><input type="checkbox" data-layer="pipeline" checked>Pipeline</label><label><input type="checkbox" data-layer="land" checked>Productive land</label></div>
     </section>
     <section class="intervention-panel" aria-label="Fund allocations"><div class="tray-heading"><div class="tray-title"><span class="eyebrow">ALLOCATE TO PROTECTION</span><button type="button" class="protection-info" id="protection-info" aria-label="About protections" title="About protections" aria-haspopup="dialog" aria-controls="detail-dialog"><svg aria-hidden="true"><use href="#i-info"/></svg></button></div><span id="token-count"></span></div><div class="token-tray" id="token-tray"></div></section>

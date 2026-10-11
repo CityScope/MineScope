@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {surfaceHeight,clamp,bounds} from './model.mjs?v=20261007-ws-status1';
+import {surfaceHeight,clamp,bounds} from './model.mjs?v=20261010-footprint1';
 import {siteMoved} from './render-policy.mjs?v=20261007-ws-status1';
 
 export function createContactLight(scene,color,size=1.8) {

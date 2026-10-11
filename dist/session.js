@@ -3,9 +3,11 @@
   if(typeof module==='object'&&module.exports){module.exports=api;return;}
   let hostTable;
   try{if(root.parent!==root&&root.frameElement?.getAttribute('data-table-display')==='true')hostTable=root.parent.MineScopeSession?.table;}catch{}
-  const parsed=api.readSession(root.location.href,{unityKey:root.MineScopeUnityConfig?.key,table:root.MineScopeScenarioConfig||hostTable});
   const base=new URL('./',document.currentScript.src);
   const displayOnly=!!hostTable;
+  const stored=displayOnly?{}:api.loadSession(()=>root.localStorage,base.href);
+  const parsed=api.readSession(root.location.href,{unityKey:root.MineScopeUnityConfig?.key??stored.unityKey,table:{...stored.table,...(root.MineScopeScenarioConfig||hostTable)}});
+  if(!displayOnly)api.saveSession(()=>root.localStorage,base.href,parsed.session);
   root.MineScopeSession=Object.freeze({...parsed.session,displayOnly,urlFor:(view,options)=>api.viewUrl(base.href,view,parsed.session,options)});
   if(displayOnly)document.documentElement.dataset.tableDisplay='true';
   root.MineScopeScenarioConfig=parsed.session.table;
@@ -19,6 +21,34 @@
   const defaultEndpoint='wss://linode.mistermatti.com/minescope/ws';
   const paths=Object.freeze({community:'./',table:'scenario/',dashboard:'dashboard/'});
   const credential=value=>typeof value==='string'&&value.length<=512&&!/[\s\u0000-\u001f\u007f]/.test(value.trim())?value.trim():'';
+  const storageKey=base=>'minescope-connection-v1:'+new URL(base).pathname;
+  function loadSession(getStorage,base){
+    try{
+      const raw=getStorage()?.getItem(storageKey(base));
+      if(!raw||raw.length>4096)return {};
+      const stored=JSON.parse(raw);
+      if(stored?.version!==1)return {};
+      const table={apiKey:credential(stored.table?.apiKey)};
+      if(typeof stored.table?.endpoint==='string'){
+        try{
+          const endpoint=new URL(stored.table.endpoint);
+          if(['ws:','wss:'].includes(endpoint.protocol)&&!endpoint.username&&!endpoint.password)table.endpoint=endpoint.href;
+        }catch{}
+      }
+      if(['minescope','table-v1'].includes(stored.table?.transport))table.transport=stored.table.transport;
+      return {unityKey:credential(stored.unityKey),table};
+    }catch{return {};}
+  }
+  function saveSession(getStorage,base,session){
+    try{
+      const storage=getStorage(),key=storageKey(base);
+      if(!storage)return;
+      const current=storage.getItem(key);
+      if(!session.unityKey&&!session.table.apiKey){if(current!==null)storage.removeItem(key);return;}
+      const value=JSON.stringify({version:1,unityKey:session.unityKey,table:{apiKey:session.table.apiKey,endpoint:session.table.endpoint,transport:session.table.transport}});
+      if(value!==current)storage.setItem(key,value);
+    }catch{}
+  }
   function readSession(href,provided={}){
     const url=new URL(href),fragment=new URLSearchParams(url.hash.slice(1));
     const take=name=>fragment.get(name)??url.searchParams.get(name);
@@ -42,5 +72,5 @@
     if(session.table.transport!=='minescope')fragment.set('tableTransport',session.table.transport);
     url.hash=fragment.toString();return url.href;
   }
-  return {readSession,viewUrl,defaultEndpoint};
+  return {readSession,viewUrl,loadSession,saveSession,defaultEndpoint};
 });

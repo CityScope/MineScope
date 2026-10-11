@@ -17,7 +17,7 @@ function setup(options={}){
   const link=new DeviceLink({apiKey:'test-credential',WebSocketClass:FakeSocket,getState:()=>structuredClone(state),applyState:p=>{state={...state,...p};applied.push(p);},onStatus:s=>statuses.push(s),schedule:fn=>{const id=next++;jobs.set(id,fn);return id;},unschedule:id=>jobs.delete(id),random:()=>.5,...options});
   return {link,jobs,statuses,applied,get state(){return state;},set state(value){state=value;},get socket(){return link.socket;},receive:message=>link.receive(JSON.stringify(message)),ready(message=snapshot()){link.socket.open();link.receive(JSON.stringify(message));},advance(){const pending=[...jobs.values()];jobs.clear();pending.forEach(fn=>fn());}};
 }
-test('runtime credentials are consumed before assets load and never persisted',()=>{
+test('the table config consumes URL credentials and delegates persistence to the shared session',()=>{
   const {config,cleanUrl}=readConfig('https://example.org/MineScope/scenario/?view=night#tableKey=test-credential');
   assert.equal(config.apiKey,'test-credential');assert.equal(config.endpoint,'wss://linode.mistermatti.com/minescope/ws');assert.equal(config.transport,'minescope');assert.equal(cleanUrl,'https://example.org/MineScope/scenario/?view=night');
   const query=readConfig('https://example.org/scenario/?tableKey=test-credential&foo=1#tableTransport=table-v1&tableSocket=ws%3A%2F%2F127.0.0.1%3A4180%2Ftable');

@@ -1,4 +1,3 @@
-/* Read a session key before loading other assets; never persist it. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports){module.exports=api;return;}

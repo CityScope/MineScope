@@ -1,6 +1,6 @@
 # Physical table link
 
-The scenario at `dist/scenario/` connects to the [MineScope device service](https://linode.mistermatti.com/minescope/), using `wss://linode.mistermatti.com/minescope/ws`. No credentials are embedded or persisted. Without a runtime key the app works locally, makes no connection attempts, and shows **WebSocket · Key needed**. This link is independent of the Unity selection API.
+The scenario at `dist/scenario/` connects to the [MineScope device service](https://linode.mistermatti.com/minescope/), using `wss://linode.mistermatti.com/minescope/ws`. No credentials are embedded in source. Keys supplied by launch link are saved in local storage and restored on refresh or reopening. Without a supplied or saved key the app works locally, makes no connection attempts, and shows **WebSocket · Key needed**. This link is independent of the Unity selection API.
 
 ## Coordinate frame
 
@@ -17,9 +17,9 @@ The amber object is an oversized interaction handle. Its projected footprint is 
 
 ## Device service setup
 
-Supply the session key as `#tableKey=YOUR_API_KEY` on the scenario URL. A blocking configuration script consumes this fragment and removes it from the address bar before other assets load. Do not commit a URL containing the real key. Share it only with intended table participants. The key lives only in memory; a full reload needs a fresh runtime key. No local/session storage or cookie stores it.
+Supply the session key as `#tableKey=YOUR_API_KEY` on the scenario URL. A blocking configuration script consumes this fragment and removes it from the address bar before other assets load. Do not commit a URL containing the real key. Share it only with intended table participants. The shared session script saves the key and connection settings in local storage. Refreshing or reopening restores them automatically. A new launch link replaces the saved values. An explicit empty `#tableKey=` clears the saved table key; `#tableKey=&unityKey=` clears both service keys. Clearing browser site data also removes them. Storage is scoped to the app base path and separate from workshop notes; if storage is blocked, the launch link still works in memory for that loaded page.
 
-Alternatively supply configuration before `table-config.js` starts:
+Alternatively supply configuration before `session.js` starts:
 
 ```js
 window.MineScopeScenarioConfig = {
@@ -75,7 +75,7 @@ The richer `table-v1` transport below remains available for the original localho
 
 ### Configure the legacy transport
 
-Supply runtime configuration before the `table.mjs` module starts:
+Supply runtime configuration before `session.js` starts:
 
 ```js
 window.MineScopeScenarioConfig = {
@@ -93,7 +93,7 @@ window.MineScopeTable.connect('wss://YOUR_SERVER/table', {transport: 'table-v1'}
 window.MineScopeTable.disconnect();
 ```
 
-For local development only, `?tableTransport=table-v1&tableSocket=ws%3A%2F%2F127.0.0.1%3A4180%2Ftable` also works. The parameters are removed from the address bar. Configuration is kept in memory, not local storage. Use `wss://` from an HTTPS page. Any production use of the legacy protocol needs its own agreed authentication. The localhost harness has no authentication.
+For local development only, `?tableTransport=table-v1&tableSocket=ws%3A%2F%2F127.0.0.1%3A4180%2Ftable` also works. The parameters are removed from the address bar. The shared session script saves connection settings alongside the table key in local storage. Use `wss://` from an HTTPS page. Any production use of the legacy protocol needs its own agreed authentication. The localhost harness has no authentication.
 
 ## Messages
 
@@ -173,6 +173,6 @@ The scenario header always shows the WebSocket status: Key needed, Not configure
 
 `dashboard/` is a read-only portrait display. Its embedded 3D table connects to the MineScope device service, adopts its snapshot, and passes computed impact and funding to the parent display. The host checks both the message origin and exact iframe source; there is only one geography load, model calculation and connection for the display. Without a key it shows a clearly labelled design example. No defaults or edits are published by the dashboard.
 
-All three views now load `session.js` before other scripts. The standard launch fragment is `#tableKey=TABLE_KEY&unityKey=UNITY_KEY`; either key may be omitted. Existing query links still work, but the view menu always transfers access via fragments. Keys are removed from the address bar and never persisted. The runtime view menu transfers both host keys; the participant QR always opens the interactive table, and includes only the supplied table credential and any custom table connection settings. Generation occurs in the browser, without a third-party QR endpoint.
+All three views now load `session.js` before other scripts. The standard launch fragment is `#tableKey=TABLE_KEY&unityKey=UNITY_KEY`; either key may be omitted. Existing query links still work, but the view menu always transfers access via fragments. Keys are removed from the address bar, saved in local storage, and restored on reload or reopening. The embedded display inherits only its parent table connection and does not read or overwrite saved credentials. The runtime view menu transfers both host keys; the participant QR always opens the interactive table, and includes only the supplied table credential and any custom table connection settings. Generation occurs in the browser, without a third-party QR endpoint.
 
 The current service does not issue expiring participant tokens: this QR grants the same table control as the supplied table key. A future invitation endpoint can replace the embedded table key with a short-lived workshop token without changing the display layout.

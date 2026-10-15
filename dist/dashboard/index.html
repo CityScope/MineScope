@@ -4,9 +4,9 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="referrer" content="no-referrer">
   <title>MineScope — Live dashboard</title><meta name="description" content="Live indicators and terrain for the MineScope community table.">
   <script src="../session.js?v=20261011-storage2"></script>
-  <link rel="stylesheet" href="../view-menu.css?v=20261010-wind1"><link rel="stylesheet" href="style.css?v=20261008-views3">
+  <link rel="stylesheet" href="../view-menu.css?v=20261010-wind1"><link rel="stylesheet" href="style.css?v=20261015-inspection1">
   <script src="../view-menu.js?v=20261010-wind1" defer></script><script src="../vendor/qrcodegen.js" defer></script>
-  <script type="module" src="dashboard.mjs?v=20261008-sync1"></script>
+  <script type="module" src="dashboard.mjs?v=20261015-cutout1"></script>
 </head>
 <body data-app-view="dashboard">
   <main class="tv-screen">
@@ -18,7 +18,7 @@
     </section>
     <div class="site-status" id="site-status"><i></i><span>Example candidate site</span><small>Illustrative scores / 100 · lower is better</small></div>
     <section class="allocation-row"><div class="protections-section"><div class="section-heading"><h2>Protections</h2><span id="funded-count">2 of 5 funded</span></div><div class="protection-list" id="protection-list"></div></div></section>
-    <section class="model-panel" aria-label="Live 3D table"><iframe id="table-display" title="Live 3D terrain model" data-table-display="true" src="../scenario/?display=tv" tabindex="-1" inert></iframe></section>
+    <section class="model-panel" aria-label="Live 3D table" data-inspection="moving"><iframe id="table-display" title="Live 3D terrain model" data-table-display="true" src="../scenario/?display=tv&amp;v=20261015-cutout3" tabindex="-1" inert></iframe><div class="inspection-heading"><span class="inspection-state" id="inspection-state" role="status">Locating proposed site</span><span id="inspection-location"></span></div><div class="inspection-context" id="inspection-context" aria-label="Surroundings near the site" hidden></div><div class="inspection-caption" id="inspection-caption" hidden>Illustrative dust, gas haze & settlement detail</div></section>
     <footer><span id="join-note">Illustrative model · USGS / NOAA · SIMBIO · © OpenStreetMap contributors</span><div class="partners"><img src="../assets/city-science.svg" alt="MIT City Science"><img src="../assets/mit-media-lab.svg" alt="MIT Media Lab"></div></footer>
   </main><noscript>This dashboard needs JavaScript for live updates.</noscript>
 </body></html>

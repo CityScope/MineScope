@@ -25,6 +25,7 @@ void main(){vec2 p=(vUv-vec2(.63,.36))*vec2(1.0,.85);float glow=exp(-dot(p,p)*3.
     shader.fragmentShader='varying vec2 vFloor;\n'+shader.fragmentShader.replace('#include <fog_fragment>','#include <fog_fragment>\ngl_FragColor.a*=1.0-smoothstep(.35,.95,length(vFloor));');
   };
   const floor=new THREE.Mesh(new THREE.PlaneGeometry(70,70),shadow);
+  floor.userData.inspectionBoard=true;
   floor.rotation.x=-Math.PI/2;floor.position.y=-.55;floor.receiveShadow=true;scene.add(floor);
 }
 

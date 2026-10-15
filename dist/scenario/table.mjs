@@ -4,7 +4,7 @@ import { createEffects } from './effects.mjs?v=20261010-wind1';
 import { createDisplay } from './display.mjs?v=20261007-ws-status1';
 import { printedMaterial, resinMaterial } from './printed-material.mjs?v=20261007-ws-status1';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { createAtmosphere } from './atmosphere.mjs?v=20261008-views1';
+import { createAtmosphere } from './atmosphere.mjs?v=20261015-cutout1';
 import {createFrameProfile} from './performance.mjs?v=20261007-ws-status1';
 import {renderPixelRatio,siteMoved} from './render-policy.mjs?v=20261007-ws-status1';
 import {terrainHit} from './terrain-hit.mjs?v=20261007-ws-status1';
@@ -17,7 +17,10 @@ import {landIndices,terrainStride} from './mesh-budget.mjs?v=20261007-ws-status1
 import {createContactLight} from './contact-light.mjs?v=20261010-footprint1';
 import { CameraSway, frontLimit } from './camera-sway.mjs?v=20261007-ws-status1';
 import { createViewportResizer } from './viewport.mjs?v=20261008-views1';
-import {fitIsometricCamera,DisplayCameraRig} from './display-camera.mjs?v=20261008-views1';
+import {fitIsometricCamera,DisplayCameraRig} from './display-camera.mjs?v=20261015-cutout2';
+import {createInspectionContext} from './inspection-context.mjs?v=20261015-inspection1';
+import {createInspectionEmissions} from './inspection-emissions.mjs?v=20261015-inspection1';
+import {createInspectionCrop} from './inspection-crop.mjs?v=20261015-cutout2';
 import {TablePointerInput,nearHandle} from './table-input.mjs?v=20261010-touch1';
 import {defaultWindBearing,normalizeBearing,windLabel} from './wind.mjs?v=20261010-wind1';
 import { bounds, plant, initialLocation, referenceLocation, settlements, interventions, clamp, isWater, surfaceHeight, habitat, livelihood, evaluate, metricInfo, siteFootprint, siteSupportHeight, configureGeography } from './model.mjs?v=20261010-footprint1';
@@ -44,7 +47,7 @@ let result=evaluate(state.location,state.protections),renderer,scene,camera,cont
 const pieces=new Map(),labels=[],groups={},vec=new THREE.Vector3(),raycaster=new THREE.Raycaster(),mouse=new THREE.Vector2(),groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 let pipelineMesh,footprint,footprintBorder,selectionRing,ghost,terrainColors,terrainPositions,terrainOcclusion,terrainMaterial,resizeObserver,effects,display,atmosphere,profile,geometryLocation,sceneReady=false,motionUntil=0;
 let terrainColorVariants,terrainColorKey=-1,terrainIndices,terrainStep=2,communityShadowVisible;
-let displayCameraRig;
+let displayCameraRig,inspectionContext,inspectionEmissions,inspectionCrop,lastInspectionMessage='',displaySiteChanged=false;
 const printedSurface=(x,z)=>surfaceHeight(x,z)+.04;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sway=new CameraSway(),upAxis=new THREE.Vector3(0,1,0);
@@ -139,7 +142,7 @@ document.addEventListener('fullscreenchange',()=>{$('#fullscreen').setAttribute(
 function closeModelMenus(){for(const [button,panel] of [['layers','layer-menu'],['wind-toggle','wind-panel']]){$(`#${panel}`).hidden=true;$(`#${button}`).setAttribute('aria-expanded','false');}}
 for(const [button,panel] of [['layers','layer-menu'],['wind-toggle','wind-panel']])$(`#${button}`).onclick=()=>{const open=$(`#${panel}`).hidden;closeModelMenus();$(`#${panel}`).hidden=!open;$(`#${button}`).setAttribute('aria-expanded',String(open));};
 document.addEventListener('pointerdown',e=>{if(!e.target.closest('#layer-menu,#layers,#wind-panel,#wind-toggle'))closeModelMenus();});
-function setWind(value){windBearing=normalizeBearing(value);$('#wind-direction').value=Number(value)===360?360:windBearing;$('#wind-direction').setAttribute('aria-valuetext',windLabel(windBearing));$('#wind-value').textContent=windLabel(windBearing);$('.wind-arrow').style.transform=`rotate(${windBearing}deg)`;canvas.dataset.windBearing=windBearing;effects?.setWind(windBearing);profile?.input();invalidate();}
+function setWind(value){windBearing=normalizeBearing(value);$('#wind-direction').value=Number(value)===360?360:windBearing;$('#wind-direction').setAttribute('aria-valuetext',windLabel(windBearing));$('#wind-value').textContent=windLabel(windBearing);$('.wind-arrow').style.transform=`rotate(${windBearing}deg)`;canvas.dataset.windBearing=windBearing;effects?.setWind(windBearing);inspectionEmissions?.setDirection(windBearing);profile?.input();invalidate();}
 $('#wind-direction').oninput=event=>setWind(event.target.value);
 for(const input of document.querySelectorAll('[data-layer]'))input.onchange=()=>{state.layers[input.dataset.layer]=input.checked;applyLayers();invalidate();};
 
@@ -202,7 +205,8 @@ async function initTerrain() {
   if(displayOnly){controls.minAzimuthAngle=-Infinity;controls.maxAzimuthAngle=Infinity;}
   atmosphere=createAtmosphere(renderer,scene,camera,{transparent:displayOnly});
   display=displayOnly?{resize(){},update(){},framingPoints:[],projectedBounds:null}:createDisplay(scene,$('#physical-display'),stage,bounds.depth);resizeViewport=createViewportResizer(camera,renderer,display);
-  box(bounds.width+.65,.32,bounds.depth+.65,material('#192c3b',{roughness:.5,metalness:.2}),scene,[0,-.14,0]);box(bounds.width+.35,.06,bounds.depth+.35,printedMaterial('#e8e4dc'),scene,[0,.04,0]);
+  box(bounds.width+.65,.32,bounds.depth+.65,material('#192c3b',{roughness:.5,metalness:.2}),scene,[0,-.14,0]).userData.inspectionBoard=true;
+  box(bounds.width+.35,.06,bounds.depth+.35,printedMaterial('#e8e4dc'),scene,[0,.04,0]).userData.inspectionBoard=true;
   const geometry=new THREE.PlaneGeometry(bounds.width,bounds.depth,512,512);geometry.rotateX(-Math.PI/2);terrainPositions=geometry.attributes.position;
   terrainColors=new Float32Array(terrainPositions.count*3);terrainOcclusion=new Float32Array(terrainPositions.count);
   for(let i=0;i<terrainPositions.count;i++) {
@@ -223,7 +227,7 @@ async function initTerrain() {
     const points=[],steps=512;
     for(let i=0;i<=steps;i++){const x=axis==='x'?sign*bounds.width/2:-bounds.width/2+bounds.width*i/steps,z=axis==='z'?sign*bounds.depth/2:-bounds.depth/2+bounds.depth*i/steps,y=surfaceHeight(x,z)+.04;points.push(x,.075,z,x,y,z);}
     const side=new THREE.BufferGeometry();side.setAttribute('position',new THREE.Float32BufferAttribute(points,3));const indices=[];
-    for(let i=0;i<steps;i++){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}side.setIndex(indices);side.computeVertexNormals();mesh(side,printedMaterial('#e6e1d8',{side:THREE.DoubleSide}));
+    for(let i=0;i<steps;i++){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}side.setIndex(indices);side.computeVertexNormals();mesh(side,printedMaterial('#e6e1d8',{side:THREE.DoubleSide})).userData.inspectionBoard=true;
   }
   groups.water=new THREE.Group();scene.add(groups.water);
   const riverPoints=[];
@@ -263,13 +267,14 @@ async function initTerrain() {
     const label=addLabel(i.shortName,()=>{const p=effects.protectionAnchor(i.id,state.location);return new THREE.Vector3(p.x,surfaceHeight(p.x,p.z)+.65,p.z);},'protection-label');
     label.protection=i.id;label.el.style.setProperty('--color',i.color);
   }
+  if(displayOnly){inspectionContext=createInspectionContext(scene);inspectionEmissions=createInspectionEmissions(scene);inspectionEmissions.setDirection(windBearing);inspectionCrop=createInspectionCrop(scene,{surfaceHeight,bounds});}
   resizeObserver=new ResizeObserver(resize);resizeObserver.observe(stage);resize();resetCamera();applyLayers();
   canvas.addEventListener('pointermove',onHover);
   canvas.addEventListener('pointerleave',()=>{if(!drag){selectedHover=null;canvas.style.cursor='grab';}});
   canvas.addEventListener('keydown',e=>moveByKey(state.selected,e));canvas.tabIndex=0;
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();$('#loading').hidden=false;$('#loading').textContent='Restoring the terrain…';cancelDrag();});
   canvas.addEventListener('webglcontextrestored',()=>{$('#loading').hidden=true;modelDirty=true;invalidate();});
-  updateModel();scene.updateMatrixWorld(true);atmosphere.render();
+  updateModel();scene.updateMatrixWorld(true);inspectionCrop?.updateCamera(camera);atmosphere.render();
   await renderer.compileAsync(scene,camera);
   sceneReady=true;$('#loading').hidden=true;recalculate({publish:false});invalidate();
 }
@@ -304,11 +309,11 @@ function updateModel() {
   piece.light.color.set(invalid?'#ee7b72':'#ffd486');
   if(displayOnly){const siteLabel=invalid?`Not viable\n${result.suitability.reasons.map(r=>r.label).join(' · ')}`:'Tailings';if(piece.label.el.textContent!==siteLabel)piece.label.el.textContent=siteLabel;}
   piece.label.el.classList.toggle('invalid',invalid);piece.label.el.title='Lift and move the tailings site';
-  for(const label of labels)if(label.settlement){const s=label.settlement;label.restricted=!!drag&&Math.abs(s.x-state.location.x)<siteFootprint.width/2+.25&&Math.abs(s.z-state.location.z)<siteFootprint.depth/2+.25;label.el.classList.toggle('restricted-hover',label.restricted);}
+  for(const label of labels)if(label.settlement){const s=label.settlement;label.restricted=(!!drag||displayOnly)&&Math.abs(s.x-state.location.x)<siteFootprint.width/2+.25&&Math.abs(s.z-state.location.z)<siteFootprint.depth/2+.25;label.el.classList.toggle('restricted-hover',label.restricted);}
   footprint.material.color.set(invalid?'#ef6f67':'#edb64f');footprint.material.opacity=invalid?.35:.23;
   footprintBorder.material.color.set(invalid?'#f58c85':'#edbd64');selectionRing.material.color.set(invalid?'#f58c85':'#f1d28c');
   if(siteMoved(geometryLocation,state.location)) {
-    displayCameraRig?.track(new THREE.Vector3(state.location.x,supportHeight(state.location,'tailings')+.4,state.location.z));
+    if(displayCameraRig?.track(new THREE.Vector3(state.location.x,supportHeight(state.location,'tailings')+.4,state.location.z)))displaySiteChanged=true;
     const points=[];
     for(let i=0;i<result.pipeline.points.length-1;i++) {
       const a=result.pipeline.points[i],b=result.pipeline.points[i+1];for(let k=0;k<3;k++){const t=k/3,x=a.x+(b.x-a.x)*t,z=a.z+(b.z-a.z)*t;points.push(new THREE.Vector3(x,surfaceHeight(x,z)+.105,z));}
@@ -321,9 +326,10 @@ function updateModel() {
     for(let j=0;j<=18;j++)for(let i=0;i<=20;i++){const index=j*21+i,x=state.location.x+siteFootprint.width*(i/20-.5),z=state.location.z+siteFootprint.depth*(.5-j/18);pos.setXYZ(index,x,surfaceHeight(x,z)+.088,z);}pos.needsUpdate=true;footprint.geometry.computeBoundingSphere();
     footprintBorder.geometry.dispose();footprintBorder.geometry=new THREE.BufferGeometry().setFromPoints(rectanglePoints(state.location,siteFootprint.width,siteFootprint.depth));
     geometryLocation={...state.location};
+    if(inspectionCrop){inspectionCrop.setLocation(state.location);inspectionCrop.refresh();displayCameraRig?.setInspectionFrame(inspectionCrop.framing);}
     if(profile)canvas.dataset.geometryUpdates=Number(canvas.dataset.geometryUpdates||0)+1;
   }
-  effects?.update(result,{placing:!!drag});piece.contact.update(state.location);modelDirty=false;
+  effects?.update(result,{placing:!!drag||remoteLift});inspectionContext?.update(result);inspectionEmissions?.update(result);piece.contact.update(state.location);modelDirty=false;
 }
 function resetCamera() {
   if(!camera)return;stopSway();const aspect=stage.clientWidth/stage.clientHeight,tan=Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
@@ -334,7 +340,7 @@ function resetCamera() {
   for(let row=0;row<=16;row++)for(let col=0;col<=16;col++) {
     const x=bounds.width*(col/16-.5),z=bounds.depth*(row/16-.5);points.push([x,surfaceHeight(x,z)+.5,z]);
   }
-  if(displayOnly){fitIsometricCamera(camera,controls.target,points,aspect);displayCameraRig=new DisplayCameraRig(camera,controls.target);controls.update();invalidate();return;}
+  if(displayOnly){fitIsometricCamera(camera,controls.target,points,aspect);displayCameraRig=new DisplayCameraRig(camera,controls.target,{reducedMotion});displaySiteChanged=displayCameraRig.track(new THREE.Vector3(state.location.x,supportHeight(state.location,'tailings')+.4,state.location.z));controls.update();invalidate();return;}
   for(const point of points) {
     const p=new THREE.Vector3(...point).sub(controls.target),depth=p.dot(direction);
     distance=Math.max(distance,depth+Math.abs(p.dot(right))/(tan*aspect)*1.07,depth+Math.abs(p.dot(up))/tan*1.07);
@@ -346,15 +352,35 @@ function resize() {
   if(resizeViewport?.(stage.clientWidth,stage.clientHeight))invalidate();
 }
 function invalidate() {dirty=true;if(!frame)frame=requestAnimationFrame(render);}
+function publishInspection(){
+  const message={type:'minescope.display.inspection',phase:displayCameraRig.phase,summary:inspectionContext.summary};
+  const signature=JSON.stringify(message);if(signature===lastInspectionMessage)return;
+  lastInspectionMessage=signature;window.parent.postMessage(message,location.origin);
+  canvas.dataset.inspectionContexts=inspectionContext.data.contexts.join(',');
+  canvas.dataset.inspectionBuildings=inspectionContext.data.buildings;canvas.dataset.inspectionTrees=inspectionContext.data.trees;
+}
 function render(time) {
   frame=0;if(!sceneReady||document.hidden)return;
   const liftMoving=Math.abs(((drag?.id==='tailings'||remoteLift)?.88:0)-(pieces.get('tailings')?.lift||0))>.002;
   if(!dirty&&!drag&&!sway.active&&!displayCameraRig?.moving&&!liftMoving&&time>motionUntil&&time-lastFrame<32){frame=requestAnimationFrame(render);return;}
   const profileStart=profile?.start()||0;
   movePendingDrag();
-  const dt=Math.min((time-lastFrame)/16.7,3)||1;lastFrame=time;
+  const elapsedSeconds=lastFrame?Math.max(0,(time-lastFrame)/1000):1/60;
+  const dt=Math.min(elapsedSeconds/.0167,3)||1;lastFrame=time;
   if(modelDirty)updateModel();
-  if(displayCameraRig?.tick(dt*.0167))dirty=true;
+  // Fresh movement starts its own rest delay while the overview keeps animating.
+  if(displayCameraRig?.tick(elapsedSeconds,{freshMovement:displaySiteChanged}))dirty=true;
+  displaySiteChanged=false;
+  if(displayCameraRig){
+    const detail=displayCameraRig.detail;
+    inspectionContext?.setDetail(detail);inspectionEmissions?.setDetail(state.layers.dust?detail:0);
+    inspectionCrop?.setDetail(detail);
+    stage.style.setProperty('--inspection-detail',detail.toFixed(3));
+    stage.dataset.inspection=displayCameraRig.phase;
+    canvas.dataset.inspectionPhase=displayCameraRig.phase;canvas.dataset.inspectionDetail=detail.toFixed(3);canvas.dataset.cameraZoom=camera.zoom.toFixed(3);
+    canvas.dataset.inspectionOrbit=displayCameraRig.orbitAngle.toFixed(4);canvas.dataset.inspectionCropRadius=inspectionCrop.data.currentRadius.toFixed(3);
+    publishInspection();
+  }
   if(sway.active){const angle=sway.advance(dt*.0167),offset=camera.position.clone().sub(controls.target);offset.applyAxisAngle(upAxis,angle-controls.getAzimuthalAngle());camera.position.copy(controls.target).add(offset);}
   controls.update();
   let animating=false;
@@ -366,16 +392,19 @@ function render(time) {
   }
   const selected=pieces.get(state.selected),p=state.selected==='tailings'?state.location:null;
   if(selected&&p){selectionRing.visible=true;selectionRing.position.set(p.x,surfaceHeight(p.x,p.z)+.16,p.z);selectionRing.scale.setScalar(state.selected==='tailings'?1.35:.85);}else selectionRing.visible=false;
-  const nextStep=terrainStride(camera.position.distanceTo(controls.target),terrainStep);
+  const nextStep=displayOnly?(displayCameraRig.detail>.45?1:2):terrainStride(camera.position.distanceTo(controls.target),terrainStep);
   if(nextStep!==terrainStep){terrainStep=nextStep;terrain.geometry.setIndex(terrainIndices[terrainStep]);}
-  effects?.tick(reducedMotion?0:time/1000);atmosphere.render();
+  const effectTime=reducedMotion?0:time/1000;
+  effects?.tick(effectTime);inspectionContext?.tick(effectTime);inspectionEmissions?.tick(effectTime);inspectionCrop?.updateCamera(camera);atmosphere.render();
   if(dirty||animating) {
     display.update(camera);
     const occupied=[];
     const labelPriority=label=>label.el.dataset.piece?2:label.restricted?1.5:label.protection?1:0;
     const orderedLabels=[...labels].sort((a,b)=>labelPriority(b)-labelPriority(a));
     for(const label of orderedLabels) {
-      label.eligible=!label.community||(state.layers.communities&&(!displayOnly||['La Higuera','Los Choros','El Trapiche'].includes(label.el.textContent)));
+      const nearby=label.settlement&&Math.hypot(label.settlement.x-state.location.x,label.settlement.z-state.location.z)<4.8;
+      label.eligible=!label.community||(state.layers.communities&&(!displayOnly||(displayCameraRig.detail>.2?nearby:['La Higuera','Los Choros','El Trapiche'].includes(label.settlement?.name))));
+      if(label.community)label.el.classList.toggle('inspection-nearby',displayOnly&&nearby&&displayCameraRig.detail>.2);
       if(label.protection) {
         const a=result.funding.allocations[label.protection];
         label.eligible=state.layers.protection&&a.requested&&a.fraction!==1;
@@ -387,7 +416,9 @@ function render(time) {
     const sizes=orderedLabels.map(label=>[label.el.offsetWidth||80,label.el.offsetHeight||20]);
     for(let index=0;index<orderedLabels.length;index++) {
       const label=orderedLabels[index];if(!label.eligible)continue;
-      const world=label.anchor();world.project(camera);const x=(world.x*.5+.5)*w,y=(-world.y*.5+.5)*h;
+      const world=label.anchor();
+      if(inspectionCrop&&!inspectionCrop.contains(world)){label.el.hidden=true;continue;}
+      world.project(camera);const x=(world.x*.5+.5)*w,y=(-world.y*.5+.5)*h;
       label.el.hidden=world.z>1||x<10||x>w-10||y<8||y>h-8;
       let top=y;const [lw,lh]=sizes[index];
       for(let n=0;n<7;n++){if(!occupied.some(r=>x+lw/2>r.left&&x-lw/2<r.right&&top>r.top&&top-lh<r.bottom))break;top-=lh+5;}

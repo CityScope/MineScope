@@ -278,3 +278,6 @@ html[data-table-display=true] .model-stage {height:100%;min-height:0;flex:1}
 html[data-table-display=true] .model-label {font-size:10px}
 html[data-table-display=true],html[data-table-display=true] body,html[data-table-display=true] main,html[data-table-display=true] .model-stage {background:transparent!important}
 html[data-table-display=true] .loading {background:transparent!important}
+html[data-table-display=true] .model-label.settlement.inspection-nearby{font-size:12px;color:#ffe1a0;border-color:#e9bb6399;background:#202e39ed;box-shadow:0 2px 12px #080d1740}
+html[data-table-display=true] .model-label.settlement.restricted-hover{color:#ffde9b;border-color:#e9bb63;background:#473d29ed}
+html[data-table-display=true] .model-label.ocean-label{opacity:calc(1 - var(--inspection-detail,0)*.85)}

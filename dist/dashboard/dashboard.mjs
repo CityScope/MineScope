@@ -65,9 +65,24 @@ function showStatus(status){
   if(status!=='connected'&&document.body.dataset.mode==='live')$('#site-status small').textContent='Last received state';
 }
 const tableDisplay=$('#table-display');
+function renderInspection(message){
+  if(!['moving','resting'].includes(message.phase)||!Array.isArray(message.summary?.items))return;
+  const resting=message.phase==='resting',summary=message.summary,panel=$('.model-panel');
+  panel.dataset.inspection=message.phase;
+  $('#inspection-state').textContent=resting?'Local terrain · inspecting':'Moving site · regional view';
+  const nearest=summary.nearestSettlement;
+  $('#inspection-location').textContent=resting&&typeof nearest?.name==='string'&&Number.isFinite(nearest.km)?`${nearest.km.toFixed(1)} km from ${nearest.name}`:'';
+  const colors={water:'#72d8f4',habitat:'#62d9a2',settlement:'#efc774',terrain:'#f39c82'};
+  const items=summary.items.filter(item=>Object.hasOwn(colors,item.id)&&typeof item.label==='string').slice(0,4);
+  const nodes=items.map(item=>{const node=document.createElement('span');node.className='context-chip';node.dataset.context=item.id;node.dataset.overlap=String(item.overlap===true);node.style.setProperty('--context-color',colors[item.id]);node.textContent=item.label;return node;});
+  if(summary.incomplete){const node=document.createElement('span');node.className='context-chip';node.textContent='Some geographic layers unavailable';nodes.push(node);}
+  $('#inspection-context').replaceChildren(...nodes);$('#inspection-context').hidden=!resting||!nodes.length;
+  $('#inspection-caption').hidden=!resting;
+}
 window.addEventListener('message',event=>{
   if(event.origin!==location.origin||event.source!==tableDisplay.contentWindow)return;
   const message=event.data;if(!message||typeof message!=='object')return;
+  if(message.type==='minescope.display.inspection')renderInspection(message);
   if(message.type==='minescope.display.status'&&typeof message.status==='string')showStatus(message.status);
   if(message.type==='minescope.display.result'){
     const result=message.result;if(!result?.current||!result.base||!result.funding?.allocations||!Array.isArray(result.suitability?.reasons)||metrics.some(m=>!Number.isFinite(result.current[m.id])||!Number.isFinite(result.base[m.id])))return;
